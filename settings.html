@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - TruthLens AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="logo">TruthLens AI</div>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="analyze.html">Analyze Content</a>
+      <a href="history.html">History</a>
+      <a href="report.html">Reports</a>
+      <a href="profile.html">Profile</a>
+      <a href="settings.html" class="active">Settings</a>
+    </aside>
+
+    <main class="main-content">
+      <h2>Settings</h2>
+      <div class="glass-card" style="max-width: 600px; margin-top: 1.5rem;">
+        <h3>Preferences</h3>
+        <p style="color: var(--text-sub); margin-bottom: 1.5rem;">Configure application behavior and defaults.</p>
+        
+        <div class="form-group">
+          <label>Default Analysis Theme</label>
+          <select class="form-control">
+            <option>Dark SaaS Mode (Active)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>ML Model Confidence Threshold</label>
+          <select class="form-control">
+            <option>Standard (Balanced Precision)</option>
+            <option>High Strictness</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" onclick="alert('Settings saved successfully!')">Save Preferences</button>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Export Report - TruthLens AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    @media print {
+      body { background: #fff; color: #000; }
+      .no-print { display: none; }
+      .glass-card { border: 1px solid #ccc; box-shadow: none; background: #fff; color: #000; }
+    }
+  </style>
+</head>
+<body>
+  <div style="max-width: 800px; margin: 3rem auto; padding: 0 1rem;">
+    <div class="no-print" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between;">
+      <a href="dashboard.html" class="btn-primary" style="background: rgba(255,255,255,0.1);">Back to Dashboard</a>
+      <button onclick="window.print()" class="btn-primary">Print PDF Report</button>
+    </div>
+
+    <div class="glass-card">
+      <h1 class="logo" style="margin-bottom: 0.5rem;">TruthLens AI</h1>
+      <p style="color: var(--text-sub); margin-bottom: 2rem;">Digital Content Trust Audit Certificate</p>
+      
+      <hr style="border-color: var(--border-color); margin-bottom: 2rem;">
+
+      <h3>Summary Findings</h3>
+      <p id="report-text" style="margin-top: 1rem; line-height: 1.6;">
+        This document serves as an automated prediction report generated via the TruthLens TF-IDF & Machine Learning model backend.
+      </p>
+
+      <div style="margin-top: 3rem; font-size: 0.85rem; color: var(--text-sub);">
+        Evaluated by TruthLens Engine | Developer: Shrutika Sonmale
+      </div>
+    </div>
+  </div>
+</body>
+</html>

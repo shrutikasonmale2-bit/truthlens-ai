@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analysis Result - TruthLens AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <main class="main-content" style="max-width: 900px; margin: 0 auto;">
+      <div class="glass-card" style="margin-top: 2rem;">
+        <h2 style="margin-bottom: 1rem;">Analysis Report</h2>
+        
+        <div class="metric-grid">
+          <div class="glass-card">
+            <h4>Trust Score</h4>
+            <h1 id="res-score" style="color: #7c3aed;">--%</h1>
+          </div>
+          <div class="glass-card">
+            <h4>Risk Rating</h4>
+            <h2 id="res-risk">--</h2>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <h4>Model Assessment</h4>
+          <p id="res-explanation" style="color: var(--text-sub); margin-top: 0.5rem;">Loading analysis...</p>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <h4>Key Indicators Detected</h4>
+          <p id="res-keywords" style="color: var(--text-sub); margin-top: 0.5rem;">None</p>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <h4>Recommended Action</h4>
+          <p id="res-recommendation" style="color: var(--text-sub); margin-top: 0.5rem;">None</p>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+          <a href="analyze.html" class="btn-primary">Analyze Another Item</a>
+          <a href="report.html" class="btn-primary" style="background: rgba(255,255,255,0.1);">Export Printable Report</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const raw = sessionStorage.getItem('latestResult');
+        console.log("Raw Session Data:", raw);
+
+        if (!raw) {
+          alert('No result found in Session! Please run an analysis first.');
+          document.getElementById('res-explanation').innerText = "No result available. Please run an analysis.";
+          return;
+        }
+
+        const data = JSON.parse(raw);
+        console.log("Parsed Data Object:", data);
+
+        // १. Trust Score (Check fallback keys: trust_score or score or trustScore)
+        const score = data.trust_score ?? data.score ?? data.trustScore ?? 0;
+        document.getElementById('res-score').innerText = `${score}%`;
+
+        // २. Risk Level (Check fallback keys: risk_level or risk or risk_rating)
+        const risk = data.risk_level ?? data.risk ?? data.risk_rating ?? 'N/A';
+        document.getElementById('res-risk').innerText = risk;
+
+        // ३. Explanation
+        const exp = data.explanation ?? data.assessment ?? data.message ?? 'Analysis completed successfully.';
+        document.getElementById('res-explanation').innerText = exp;
+
+        // ४. Keywords / Indicators
+        const kw = data.keywords ?? data.indicators ?? [];
+        if (Array.isArray(kw)) {
+          document.getElementById('res-keywords').innerText = kw.length > 0 ? kw.join(', ') : 'None detected';
+        } else {
+          document.getElementById('res-keywords').innerText = kw || 'None detected';
+        }
+
+        // ५. Recommendations
+        const rec = data.recommendations ?? data.recommendation ?? data.action ?? 'No specific recommendation provided.';
+        document.getElementById('res-recommendation').innerText = rec;
+
+      } catch (err) {
+        console.error("Error parsing result data:", err);
+        alert("Failed to render output data. Check Console for details.");
+      }
+    });
+  </script>
+</body>
+</html>

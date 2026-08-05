@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - TruthLens AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">TruthLens AI</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <a href="login.html" class="btn-primary">Get Started</a>
+  </nav>
+
+  <div style="max-width: 600px; margin: 4rem auto; padding: 0 1.5rem;">
+    <div class="glass-card">
+      <h2>Contact Us</h2>
+      <p style="color: var(--text-sub); margin-bottom: 2rem;">Have questions about the platform?</p>
+      
+      <form onsubmit="event.preventDefault(); alert('Message sent!');">
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" class="form-control" required placeholder="Name">
+        </div>
+        <div class="form-group">
+          <label>Your Email</label>
+          <input type="email" class="form-control" required placeholder="Email">
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea class="form-control" required placeholder="Write your inquiry here..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Send Message</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

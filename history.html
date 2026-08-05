@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analysis History - TruthLens AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="logo">TruthLens AI</div>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="analyze.html">Analyze Content</a>
+      <a href="history.html" class="active">History</a>
+      <a href="report.html">Reports</a>
+      <a href="profile.html">Profile</a>
+      <a href="settings.html">Settings</a>
+    </aside>
+
+    <main class="main-content">
+      <h2>Scan History</h2>
+      <p style="color: var(--text-sub); margin-bottom: 2rem;">Log of previous AI validations stored on Firestore.</p>
+
+      <div class="glass-card" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-sub);">
+              <th style="padding: 1rem;">Type</th>
+              <th style="padding: 1rem;">Content Snippet</th>
+              <th style="padding: 1rem;">Trust Score</th>
+              <th style="padding: 1rem;">Risk Level</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <tr>
+              <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">
+                Loading history...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { auth, db, collection, getDocs, query, where, onAuthStateChanged } from './js/firebase.js';
+
+    onAuthStateChanged(auth, async (user) => {
+      // १. लॉगिन नसलेल्या युझरला लॉगिन पेजवर पाठवणे
+      if (!user) {
+        alert('Please log in first!');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const tbody = document.getElementById('history-table-body');
+      if (!tbody) return;
+
+      try {
+        console.log("Fetching history for User ID:", user.uid);
+
+        // २. Firestore मधून सध्याच्या युझरचा डेटा मागवणे
+        const q = query(collection(db, 'analyses'), where('userId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        
+        console.log("Total records found:", querySnapshot.size);
+        tbody.innerHTML = '';
+        
+        // ३. जर डेटा नसेल तर
+        if (querySnapshot.empty) {
+          tbody.innerHTML = '<tr><td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">No scan records found.</td></tr>';
+          return;
+        }
+
+        // ४. डेटा टेबलमध्ये जोडणे
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+          
+          const score = data.result?.trust_score ?? data.result?.score ?? '--';
+          const risk = data.result?.risk_level ?? data.result?.risk ?? 'N/A';
+          const type = data.contentType || 'Text';
+          const snippet = data.contentSnippet || '';
+
+          tr.innerHTML = `
+            <td style="padding: 1rem;">${type}</td>
+            <td style="padding: 1rem; color: var(--text-sub);">${snippet}...</td>
+            <td style="padding: 1rem; font-weight: 600; color: #7c3aed;">${score}%</td>
+            <td style="padding: 1rem;">${risk}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (error) {
+        console.error("Error fetching history:", error);
+        tbody.innerHTML = '<tr><td colspan="4" style="padding: 1.5rem; text-align: center; color: #ef4444;">Failed to load history from Firestore. Check console for details.</td></tr>';
+      }
+    });
+  </script>
+</body>
+</html>

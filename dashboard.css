@@ -1,0 +1,173 @@
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  background: rgba(255, 255, 255, 0.02);
+  border-right: 1px solid var(--border-color);
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sidebar a {
+  color: var(--text-sub);
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.sidebar a.active, .sidebar a:hover {
+  background: var(--primary-gradient);
+  color: #fff;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem 4%;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  text-align: center;
+}
+
+.metric-card h3 {
+  font-size: 2rem;
+  margin-top: 0.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-sub);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: #fff;
+  outline: none;
+}
+
+.form-control:focus {
+  border-color: #7c3aed;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 120px;
+}
+/* ================= Modern Pure CSS Animated Logo ================= */
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Outer Glowing Frame */
+.logo-icon-box {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+/* Animated Rotating Gradient Background Ring */
+.logo-icon-box::before {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: conic-gradient(#4f46e5, #7c3aed, #22c55e, #4f46e5);
+  animation: rotateGlow 4s linear infinite;
+  z-index: 1;
+}
+
+/* Inner Dark Core for Glass Effect */
+.logo-icon-core {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  background: #050816;
+  border-radius: 10px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Inner Pulse AI Lens/Pupil */
+.ai-lens {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #22c55e, #4f46e5);
+  border-radius: 50%;
+  box-shadow: 0 0 10px #22c55e;
+  animation: pulseCore 2s ease-in-out infinite alternate;
+}
+
+/* Logo Text Styles */
+.logo-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.logo-title span {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo-tagline {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* Keyframe Animations */
+@keyframes rotateGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseCore {
+  0% { transform: scale(0.85); box-shadow: 0 0 5px #22c55e; }
+  100% { transform: scale(1.15); box-shadow: 0 0 12px #a855f7; }
+}

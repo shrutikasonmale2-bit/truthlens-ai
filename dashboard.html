@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - TruthLens AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="logo">TruthLens AI</div>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="analyze.html">Analyze Content</a>
+      <a href="history.html">History</a>
+      <a href="report.html">Reports</a>
+      <a href="profile.html">Profile</a>
+      <a href="settings.html">Settings</a>
+    </aside>
+
+    <main class="main-content">
+      <h2>Welcome Back</h2>
+      <p style="color: var(--text-sub); margin-bottom: 2rem;">Overview of your digital trust metrics.</p>
+
+      <div class="metric-grid">
+        <div class="glass-card metric-card">
+          <h4>Total Analyzed</h4>
+          <h3 id="stat-total">0</h3>
+        </div>
+        <div class="glass-card metric-card">
+          <h4>High Trust</h4>
+          <h3 id="stat-safe">0</h3>
+        </div>
+        <div class="glass-card metric-card">
+          <h4>Suspicious Content</h4>
+          <h3 id="stat-risky">0</h3>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h3>Quick Scan</h3>
+        <p style="color: var(--text-sub); margin-bottom: 1rem;">Directly jump to content evaluation tool.</p>
+        <a href="analyze.html" class="btn-primary">Start New Analysis</a>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    // auth.js चा import काढून फक्त firebase.js चा वापर केला आहे
+    import { auth, db, collection, getDocs, query, where, onAuthStateChanged } from './js/firebase.js';
+
+    // १. युझर ऑथेंटिकेशन आणि डेटा फेचिंग एकत्र
+    onAuthStateChanged(auth, async (user) => {
+      // जर युझर लॉगिन नसेल तर थेट लॉगिन पेजवर पाठवा
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      try {
+        // २. Firestore मधून युझरचे सर्व analyses मागवणे
+        const q = query(collection(db, 'analyses'), where('userId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+
+        let totalCount = querySnapshot.size;
+        let safeCount = 0;
+        let riskyCount = 0;
+
+        // ३. Trust Score चे मोजमाप
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const score = data.result?.trust_score ?? data.result?.score ?? 0;
+
+          if (score >= 70) {
+            safeCount++;
+          } else if (score < 40) {
+            riskyCount++;
+          }
+        });
+
+        // ४. Dashboard वरील आकडे अपडेट करणे
+        document.getElementById('stat-total').innerText = totalCount;
+        document.getElementById('stat-safe').innerText = safeCount;
+        document.getElementById('stat-risky').innerText = riskyCount;
+
+      } catch (error) {
+        console.error("Dashboard metrics load error:", error);
+      }
+    });
+  </script>
+</body>
+</html>
