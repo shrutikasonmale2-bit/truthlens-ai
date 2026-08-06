@@ -1,13 +1,13 @@
 import { auth, db, collection, addDoc, serverTimestamp, onAuthStateChanged } from './firebase.js';
 
-// 🚨 Siren Sound Object (Siren Sound साठी Link)
+// 🚨 Siren Sound Link
 const sirenAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('analyze-form');
   if (!form) return;
 
-  // 1. युझर लॉगिन चेकींग
+  // 1. लॉगिन चेक
   onAuthStateChanged(auth, (user) => {
     if (!user) {
       alert('Please log in first to analyze content!');
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. फॉर्म सबमिट
   form.addEventListener('submit', async (e) => {
-    e.preventDefault(); // फॉर्म रीलोड होण्यापासून रोखण्यासाठी
+    e.preventDefault(); // डेटा आणि पेज रिफ्रेश होण्यापासून रोखण्यासाठी
 
     const currentUser = auth.currentUser;
     if (!currentUser) {
@@ -29,14 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-input');
     const file = fileInput?.files[0];
 
-    // जर दोन्हीपैकी काहीच इनपुट नसेल तर
     if (!textContent && !file) {
       alert('कृपया टेक्स्ट पेस्ट करा किंवा इमेज/व्हिडिओ फाईल सेलेक्ट करा!');
       return;
     }
 
     const loading = document.getElementById('loading-indicator');
+    const resultDisplay = document.getElementById('result-display');
+
     if (loading) loading.style.display = 'block';
+    if (resultDisplay) resultDisplay.innerHTML = '';
 
     try {
       let contentType = 'text';
@@ -48,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         snippet = file.name;
       }
 
-      // ⚠️ Note: Backend API उपलब्ध नसल्यास Fallback Simulation Logic (GitHub Pages साठी)
+      // Backend simulation (GitHub Pages साठी Demo Data)
       try {
         const formData = new FormData();
         if (file) {
@@ -65,26 +67,24 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ type: contentType, content: textContent })
         };
 
-        // Backend Server URL
         const response = await fetch('http://127.0.0.1:5000/predict', fetchOptions);
         if (!response.ok) throw new Error(`Server status: ${response.status}`);
         data = await response.json();
 
       } catch (backendError) {
-        console.warn("Backend not reachable, running client-side analysis simulation...", backendError);
+        console.warn("Backend not reachable, running simulation...", backendError);
         
-        // जर Backend चालत नसेल, तर Demo साठी Simulation Result generate होईल:
+        // 🚨 DEMO TEST: FAKE DATA
         data = {
-          label: 'FAKE', // किंवा 'REAL'
+          label: 'FAKE',
           confidence: 88.5,
-          message: 'Content shows high indicators of AI manipulation.'
+          isFake: true
         };
       }
 
-      // Session Storage मध्ये सेव्ह
+      // Session Storage आणि Firestore सेव्ह
       sessionStorage.setItem('latestResult', JSON.stringify(data));
 
-      // Firestore मध्ये सेव्ह
       await addDoc(collection(db, 'analyses'), {
         userId: currentUser.uid,
         contentType: contentType,
@@ -93,18 +93,39 @@ document.addEventListener('DOMContentLoaded', () => {
         createdAt: serverTimestamp()
       });
 
-      // 🚨 जर Output / Prediction 'FAKE' असेल तर Siren वाजवा
-      if (data.label === 'FAKE' || data.isFake === true) {
+      // 🔍 HIGH RISK CHECK logic
+      const isHighRisk = (data.label === 'FAKE' || data.isFake === true);
+
+      if (isHighRisk) {
+        // 🚨 1. SIREN SOUND PLAY
         sirenAudio.currentTime = 0;
         await sirenAudio.play().catch(err => console.log("Audio play blocked by browser:", err));
 
-        // Siren ऐकण्यासाठी १.५ सेकंदाचा Delay देऊन Result Page वर Redirect करा
-        setTimeout(() => {
-          window.location.href = 'result.html';
-        }, 1500);
+        // 🚨 2. HIGH RISK RED BANNER DISPLAY
+        if (resultDisplay) {
+          resultDisplay.innerHTML = `
+            <div style="background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; border-radius: 12px; padding: 1.5rem; text-align: center; color: #fca5a5; margin-top: 1.5rem;">
+              <h2 style="color: #ef4444; margin-bottom: 0.5rem; font-size: 1.5rem;">🚨 HIGH RISK DETECTED!</h2>
+              <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem;">
+                Warning: This content appears to be Fake or Digitally Manipulated.
+              </p>
+              <p style="font-size: 0.9rem; color: #f87171; margin: 0;">
+                Trust Score: <b>11.5% (Critical Risk)</b> • Do not share or spread this information.
+              </p>
+            </div>
+          `;
+        }
       } else {
-        // जर Content REAL असेल तर लगेच Redirect करा
-        window.location.href = 'result.html';
+        // ✅ LOW RISK DISPLAY
+        sirenAudio.pause();
+        if (resultDisplay) {
+          resultDisplay.innerHTML = `
+            <div style="background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; border-radius: 12px; padding: 1.5rem; text-align: center; color: #86efac; margin-top: 1.5rem;">
+              <h2 style="color: #22c55e; margin-bottom: 0.5rem; font-size: 1.5rem;">✅ LOW RISK / AUTHENTIC</h2>
+              <p style="font-size: 1.05rem; font-weight: 600;">This content appears to be Original and Safe.</p>
+            </div>
+          `;
+        }
       }
 
     } catch (err) {
