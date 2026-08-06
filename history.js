@@ -1,21 +1,17 @@
+// Path तपासा: जर firebase.js 'js' फोल्डरमध्ये असेल तर './js/firebase.js' करा
 import { auth, db, collection, query, where, getDocs, onAuthStateChanged } from './firebase.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. युझर लॉगिन असण्याची वाट पाहणे
   onAuthStateChanged(auth, async (user) => {
-    const historyContainer = document.getElementById('history-container') || document.querySelector('.glass-card');
     const loadingElem = document.getElementById('loading-history');
+    const historyContainer = document.getElementById('history-container') || document.querySelector('.glass-card');
 
     if (!user) {
-      console.log("User not logged in.");
-      if (loadingElem) loadingElem.innerText = "Please log in to view history.";
+      if (loadingElem) loadingElem.innerText = "Please log in first.";
       return;
     }
 
     try {
-      console.log("Fetching history for user:", user.uid);
-
-      // 2. Firestore मधून सध्याच्या युझरचा डेटा आणणे
       const q = query(
         collection(db, 'analyses'), 
         where('userId', '==', user.uid)
@@ -28,33 +24,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // 3. डेटा फॉरमॅट करून HTML तयार करणे
       let historyHTML = '';
 
       querySnapshot.forEach((doc) => {
         const item = doc.data();
-
-        // High Risk / Fake चेकिंग
         const isFake = item.result?.label === 'FAKE' || item.result?.isFake === true;
-        
-        // Trust Score Calc
         const confidence = item.result?.confidence || 88.5;
         const score = isFake ? (100 - confidence).toFixed(1) : confidence;
 
-        // Risk Level Badge
         const riskBadge = isFake 
           ? `<span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #ef4444;">HIGH RISK</span>`
           : `<span style="color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #22c55e;">LOW RISK</span>`;
 
-        const type = item.contentType || 'Text';
-        const snippet = item.contentSnippet || 'No preview available';
-
         historyHTML += `
           <div class="history-item" style="display: flex; justify-content: space-between; padding: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); align-items: center; background: rgba(255,255,255,0.02); margin-bottom: 8px; border-radius: 8px;">
             <div style="max-width: 65%;">
-              <span style="font-size: 0.75rem; background: #7c3aed; color: #fff; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 600;">${type}</span>
+              <span style="font-size: 0.75rem; background: #7c3aed; color: #fff; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 600;">${item.contentType || 'Text'}</span>
               <p style="margin-top: 0.6rem; color: #e2e8f0; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;">
-                "${snippet}"
+                "${item.contentSnippet || 'No preview available'}"
               </p>
             </div>
             <div style="text-align: right;">
@@ -67,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       });
 
-      // 4. "Loading history..." काढणे आणि टेबलमध्ये दाखवणे
       if (loadingElem && loadingElem.parentElement) {
         loadingElem.parentElement.innerHTML = historyHTML;
       } else if (historyContainer) {
