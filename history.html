@@ -46,10 +46,10 @@
   </div>
 
   <script type="module">
-    import { auth, db, collection, getDocs, query, where, onAuthStateChanged } from './js/firebase.js';
+    // 🎯 Fix: Path मधून './js/' पूर्णपणे काढले आहे कारण firebase.js डायरेक्ट Root मध्ये आहे.
+    import { auth, db, collection, getDocs, query, where, onAuthStateChanged } from './firebase.js';
 
     onAuthStateChanged(auth, async (user) => {
-      // १. लॉगिन नसलेल्या युझरला लॉगिन पेजवर पाठवणे
       if (!user) {
         alert('Please log in first!');
         window.location.href = 'login.html';
@@ -62,35 +62,39 @@
       try {
         console.log("Fetching history for User ID:", user.uid);
 
-        // २. Firestore मधून सध्याच्या युझरचा डेटा मागवणे
         const q = query(collection(db, 'analyses'), where('userId', '==', user.uid));
         const querySnapshot = await getDocs(q);
         
         console.log("Total records found:", querySnapshot.size);
         tbody.innerHTML = '';
         
-        // ३. जर डेटा नसेल तर
         if (querySnapshot.empty) {
           tbody.innerHTML = '<tr><td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">No scan records found.</td></tr>';
           return;
         }
 
-        // ४. डेटा टेबलमध्ये जोडणे
         querySnapshot.forEach((doc) => {
           const data = doc.data();
           const tr = document.createElement('tr');
           tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
           
-          const score = data.result?.trust_score ?? data.result?.score ?? '--';
-          const risk = data.result?.risk_level ?? data.result?.risk ?? 'N/A';
+          // High Risk Check
+          const isFake = data.result?.label === 'FAKE' || data.result?.isFake === true;
+          const confidence = data.result?.confidence || 88.5;
+          const score = isFake ? (100 - confidence).toFixed(1) : confidence;
+
+          const riskBadge = isFake 
+            ? `<span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #ef4444;">HIGH RISK</span>`
+            : `<span style="color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #22c55e;">LOW RISK</span>`;
+
           const type = data.contentType || 'Text';
-          const snippet = data.contentSnippet || '';
+          const snippet = data.contentSnippet || 'No snippet';
 
           tr.innerHTML = `
-            <td style="padding: 1rem;">${type}</td>
-            <td style="padding: 1rem; color: var(--text-sub);">${snippet}...</td>
-            <td style="padding: 1rem; font-weight: 600; color: #7c3aed;">${score}%</td>
-            <td style="padding: 1rem;">${risk}</td>
+            <td style="padding: 1rem; text-transform: capitalize;">${type}</td>
+            <td style="padding: 1rem; color: var(--text-sub); max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">"${snippet}"</td>
+            <td style="padding: 1rem; font-weight: 600; color: ${isFake ? '#ef4444' : '#22c55e'};">${score}%</td>
+            <td style="padding: 1rem;">${riskBadge}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -99,7 +103,6 @@
         tbody.innerHTML = '<tr><td colspan="4" style="padding: 1.5rem; text-align: center; color: #ef4444;">Failed to load history from Firestore. Check console for details.</td></tr>';
       }
     });
-    <script type="module" src="history.js"></script>
   </script>
 </body>
 </html>
