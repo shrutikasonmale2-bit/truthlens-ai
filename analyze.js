@@ -1,13 +1,13 @@
 import { auth, db, collection, addDoc, serverTimestamp, onAuthStateChanged } from './firebase.js';
 
-// 🚨 Siren Sound Link
+// 🚨 Siren Sound (Direct Sound Link)
 const sirenAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('analyze-form');
   if (!form) return;
 
-  // 1. लॉगिन चेक
+  // 1. युझर लॉगिन चेकींग
   onAuthStateChanged(auth, (user) => {
     if (!user) {
       alert('Please log in first to analyze content!');
@@ -17,7 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. फॉर्म सबमिट
   form.addEventListener('submit', async (e) => {
-    e.preventDefault(); // डेटा आणि पेज रिफ्रेश होण्यापासून रोखण्यासाठी
+    e.preventDefault();
+
+    // 🔊 Browser Permission Fix: बटण क्लिक होताच साऊंड लोडींग चालू करा
+    sirenAudio.load();
 
     const currentUser = auth.currentUser;
     if (!currentUser) {
@@ -35,10 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const loading = document.getElementById('loading-indicator');
-    const resultDisplay = document.getElementById('result-display');
+    let resultDisplay = document.getElementById('result-display');
+
+    // जर result-display div नसेल तर आपोआप तयार करा
+    if (!resultDisplay) {
+      resultDisplay = document.createElement('div');
+      resultDisplay.id = 'result-display';
+      form.appendChild(resultDisplay);
+    }
 
     if (loading) loading.style.display = 'block';
-    if (resultDisplay) resultDisplay.innerHTML = '';
+    resultDisplay.innerHTML = '';
 
     try {
       let contentType = 'text';
@@ -50,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         snippet = file.name;
       }
 
-      // Backend simulation (GitHub Pages साठी Demo Data)
+      // Simulation / Backend Call
       try {
         const formData = new FormData();
         if (file) {
@@ -73,8 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       } catch (backendError) {
         console.warn("Backend not reachable, running simulation...", backendError);
-        
-        // 🚨 DEMO TEST: FAKE DATA
+        // Demo FAKE Data (High Risk)
         data = {
           label: 'FAKE',
           confidence: 88.5,
@@ -82,9 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
       }
 
-      // Session Storage आणि Firestore सेव्ह
+      // Save to Session and DB
       sessionStorage.setItem('latestResult', JSON.stringify(data));
-
       await addDoc(collection(db, 'analyses'), {
         userId: currentUser.uid,
         contentType: contentType,
@@ -93,39 +101,43 @@ document.addEventListener('DOMContentLoaded', () => {
         createdAt: serverTimestamp()
       });
 
-      // 🔍 HIGH RISK CHECK logic
+      // 🚨 High Risk Test & Siren Sound Play
       const isHighRisk = (data.label === 'FAKE' || data.isFake === true);
 
       if (isHighRisk) {
-        // 🚨 1. SIREN SOUND PLAY
+        // 🚨 SIREN PLAY
         sirenAudio.currentTime = 0;
-        await sirenAudio.play().catch(err => console.log("Audio play blocked by browser:", err));
+        
+        // Play sound with User Interaction Permission
+        const playPromise = sirenAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log("Audio Autoplay failed:", error);
+            // जर ब्राऊझरने ऑटोप्ले ब्लॉक केला तर अल्टरनेटीव्ह अलर्ट
+            alert("🚨 HIGH RISK DETECTED!");
+          });
+        }
 
-        // 🚨 2. HIGH RISK RED BANNER DISPLAY
-        if (resultDisplay) {
-          resultDisplay.innerHTML = `
-            <div style="background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; border-radius: 12px; padding: 1.5rem; text-align: center; color: #fca5a5; margin-top: 1.5rem;">
-              <h2 style="color: #ef4444; margin-bottom: 0.5rem; font-size: 1.5rem;">🚨 HIGH RISK DETECTED!</h2>
-              <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem;">
-                Warning: This content appears to be Fake or Digitally Manipulated.
-              </p>
-              <p style="font-size: 0.9rem; color: #f87171; margin: 0;">
-                Trust Score: <b>11.5% (Critical Risk)</b> • Do not share or spread this information.
-              </p>
-            </div>
-          `;
-        }
+        // Display High Risk Box
+        resultDisplay.innerHTML = `
+          <div style="background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; border-radius: 12px; padding: 1.5rem; text-align: center; color: #fca5a5; margin-top: 1.5rem;">
+            <h2 style="color: #ef4444; margin-bottom: 0.5rem; font-size: 1.5rem;">🚨 HIGH RISK DETECTED!</h2>
+            <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem;">
+              Warning: This content appears to be Fake or Digitally Manipulated.
+            </p>
+            <p style="font-size: 0.9rem; color: #f87171; margin: 0;">
+              Trust Score: <b>11.5% (Critical Risk)</b> • Do not share or spread this information.
+            </p>
+          </div>
+        `;
       } else {
-        // ✅ LOW RISK DISPLAY
         sirenAudio.pause();
-        if (resultDisplay) {
-          resultDisplay.innerHTML = `
-            <div style="background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; border-radius: 12px; padding: 1.5rem; text-align: center; color: #86efac; margin-top: 1.5rem;">
-              <h2 style="color: #22c55e; margin-bottom: 0.5rem; font-size: 1.5rem;">✅ LOW RISK / AUTHENTIC</h2>
-              <p style="font-size: 1.05rem; font-weight: 600;">This content appears to be Original and Safe.</p>
-            </div>
-          `;
-        }
+        resultDisplay.innerHTML = `
+          <div style="background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; border-radius: 12px; padding: 1.5rem; text-align: center; color: #86efac; margin-top: 1.5rem;">
+            <h2 style="color: #22c55e; margin-bottom: 0.5rem; font-size: 1.5rem;">✅ LOW RISK / AUTHENTIC</h2>
+            <p style="font-size: 1.05rem; font-weight: 600;">This content appears to be Original and Safe.</p>
+          </div>
+        `;
       }
 
     } catch (err) {
