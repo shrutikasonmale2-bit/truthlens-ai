@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analyze Content - TruthLens AI</title>
-   <link rel="stylesheet" href="style.css?v=1"> 
+  <link rel="stylesheet" href="style.css?v=1"> 
   <link rel="stylesheet" href="dashboard.css?v=1">
 </head>
 <body>
@@ -22,30 +22,35 @@
     <main class="main-content">
       <h2>Analyze Content</h2>
       <p style="color: var(--text-sub); margin-bottom: 2rem;">Upload or paste content to check for AI generation and digital manipulation.</p>
-     <div class="glass-card">
-  <form id="analyze-form">
-    
-    <div style="margin-bottom: 1.5rem;">
-      <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Input Text / Link</label>
-      <textarea id="content-input" rows="4" placeholder="Paste the text or link here..." style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px; resize: vertical;"></textarea>
-    </div>
+      
+      <div class="glass-card">
+        <form id="analyze-form">
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Input Text / Link</label>
+            <textarea id="content-input" rows="4" placeholder="Paste the text or link here..." style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px; resize: vertical;"></textarea>
+          </div>
 
-    <div style="text-align: center; margin: 1rem 0; color: var(--text-sub); font-weight: 600;">— OR —</div>
+          <div style="text-align: center; margin: 1rem 0; color: var(--text-sub); font-weight: 600;">— OR —</div>
 
-    <div style="margin-bottom: 1.5rem;">
-      <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Upload Image or Video File</label>
-      <input type="file" id="file-input" accept="image/*,video/*" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
-    </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Upload Image or Video File</label>
+            <input type="file" id="file-input" accept="image/*,video/*" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+          </div>
 
-    <div id="loading-indicator" style="display: none; margin-bottom: 1rem; color: #a855f7;">
-      Analyzing... Please wait.
-    </div>
+          <div id="loading-indicator" style="display: none; margin-bottom: 1rem; color: #a855f7; font-weight: 600;">
+            Analyzing... Please wait.
+          </div>
 
-    <button type="submit" class="btn-primary" style="padding: 0.8rem 1.5rem; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
-      Run Trust Analysis
-    </button>
-  </form>
-</div>
-      <script type="module" src="./js/analyze.js"></script>
+          <button type="submit" id="analyze-btn" class="btn-primary" style="padding: 0.8rem 1.5rem; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
+            Run Trust Analysis
+          </button>
+        </form>
+
+        <div id="result-display" style="margin-top: 1.5rem; text-align: center;"></div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="analyze.js"></script>
 </body>
 </html>
