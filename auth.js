@@ -4,7 +4,10 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfi
 // Helper function for Toast Notification
 function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
-  if (!toast) return;
+  if (!toast) {
+    alert(message); // Fallback in case toast element is missing
+    return;
+  }
   
   toast.innerText = message;
   toast.style.display = 'block';
@@ -47,12 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         showToast("Registration Successful! Redirecting to Login...", "success");
         
-        // Wait 1.5 seconds and redirect to login page
         setTimeout(() => {
           window.location.href = 'login.html?registered=true';
         }, 1500);
 
       } catch (error) {
+        console.error("Registration Error:", error);
         showToast(error.message, "error");
       }
     });
@@ -61,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Login Logic
   const loginForm = document.getElementById('login-form');
   if (loginForm) {
-    // Check if coming after successful registration
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('registered') === 'true') {
       showToast("Registration Complete! Please login now.", "success");
@@ -76,15 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
         await signInWithEmailAndPassword(auth, email, password);
         showToast("Login Successful! Opening Dashboard...", "success");
 
-        // Redirect directly to Dashboard
         setTimeout(() => {
           window.location.href = 'dashboard.html';
         }, 1200);
 
       } catch (error) {
-        // If account not registered or wrong details
+        console.error("Login Error:", error);
         if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-          showToast("Account not found! Redirecting to Registration...", "error");
+          showToast("Account not found or Invalid credentials! Redirecting to Registration...", "error");
           setTimeout(() => {
             window.location.href = 'register.html';
           }, 2000);
@@ -98,7 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // 4. Google Login Flow
   const googleBtn = document.getElementById('google-btn');
   if (googleBtn) {
-    googleBtn.addEventListener('click', async () => {
+    googleBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
       try {
         await signInWithPopup(auth, googleProvider);
         showToast("Google Sign-in Successful!", "success");
@@ -106,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
           window.location.href = 'dashboard.html';
         }, 1000);
       } catch (error) {
+        console.error("Google Sign-In Error:", error);
         showToast(error.message, "error");
       }
     });
