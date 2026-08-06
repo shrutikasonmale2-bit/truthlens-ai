@@ -1,7 +1,7 @@
 import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// Helper function for Toast Notification
+// Helper function for Toast No
 function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
   if (!toast) {
