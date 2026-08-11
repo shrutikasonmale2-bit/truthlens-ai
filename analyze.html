@@ -6,6 +6,67 @@
   <title>Analyze Content - TruthLens AI</title>
   <link rel="stylesheet" href="style.css?v=1"> 
   <link rel="stylesheet" href="dashboard.css?v=1">
+  <style>
+    /* Tabs styling */
+    .tab-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 0.6rem 1.2rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-sub, #a4b0be);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .tab-btn.active {
+      background: #7c3aed;
+      color: white;
+      border-color: #7c3aed;
+      box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Progress Loader styling */
+    .progress-box {
+      display: none;
+      margin: 1.5rem 0;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .progress-bar {
+      width: 0%;
+      height: 8px;
+      background: linear-gradient(90deg, #7c3aed, #a855f7);
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .or-divider {
+      text-align: center;
+      margin: 0.8rem 0;
+      color: #8b8ea8;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .input-hint {
+      display: block;
+      margin-top: 0.4rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+  </style>
 </head>
 <body>
   <div class="dashboard-layout">
@@ -20,33 +81,62 @@
     </aside>
 
     <main class="main-content">
-      <h2>Analyze Content</h2>
-      <p style="color: var(--text-sub); margin-bottom: 2rem;">Upload or paste content to check for AI generation and digital manipulation.</p>
+      <h2>Analyze Digital Content</h2>
+      <p style="color: var(--text-sub); margin-bottom: 2rem;">Choose media type and run AI verification & deepfake detection pipeline.</p>
       
       <div class="glass-card">
+        <!-- Multi-Media Input Tabs -->
+        <div class="tab-group">
+          <button type="button" class="tab-btn active" data-tab="text-tab">📝 Text Content</button>
+          <button type="button" class="tab-btn" data-tab="url-tab">🌐 Web URL</button>
+          <button type="button" class="tab-btn" data-tab="reels-tab">📲 Reel / Video</button>
+          <button type="button" class="tab-btn" data-tab="image-tab">🖼️ Screenshot / Image</button>
+        </div>
+
         <form id="analyze-form">
-          <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Input Text / Link</label>
-            <textarea id="content-input" rows="4" placeholder="Paste the text or link here..." style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px; resize: vertical;"></textarea>
+          <!-- 1. Text Content Tab -->
+          <div id="text-tab" class="tab-content active">
+            <label style="display: block; margin-bottom: 0.5rem;">Paste News Text / Claim Content</label>
+            <textarea id="text-input" rows="5" placeholder="Paste news article or suspicious message text..." style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px; resize: vertical;"></textarea>
           </div>
 
-          <div style="text-align: center; margin: 1rem 0; color: var(--text-sub); font-weight: 600;">— OR —</div>
-
-          <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Upload Image or Video File</label>
-            <input type="file" id="file-input" accept="image/*,video/*" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+          <!-- 2. Web URL Scraper Tab -->
+          <div id="url-tab" class="tab-content">
+            <label style="display: block; margin-bottom: 0.5rem;">Enter Article / News Website Link</label>
+            <input type="url" id="url-input" placeholder="https://example.com/suspicious-article" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+            <span class="input-hint">Scrapes online news content & cross-verifies source domain reputation.</span>
           </div>
 
-          <div id="loading-indicator" style="display: none; margin-bottom: 1rem; color: #a855f7; font-weight: 600;">
-            Analyzing... Please wait.
+          <!-- 3. Reels & Deepfake Video Tab -->
+          <div id="reels-tab" class="tab-content">
+            <label style="display: block; margin-bottom: 0.5rem;">Paste Instagram Reel / YouTube Short URL</label>
+            <input type="text" id="reel-url" placeholder="https://www.instagram.com/reel/... or YouTube Short Link" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+            
+            <p class="or-divider">— OR UPLOAD VIDEO FILE —</p>
+            
+            <input type="file" id="video-file" accept="video/mp4,video/mkv,video/avi" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+            <span class="input-hint">Checks facial frame consistency, lip-sync mismatch & synthetic voice artifacts.</span>
           </div>
 
-          <button type="submit" id="analyze-btn" class="btn-primary" style="padding: 0.8rem 1.5rem; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
-            Run Trust Analysis
+          <!-- 4. Screenshot / Image OCR Tab -->
+          <div id="image-tab" class="tab-content">
+            <label style="display: block; margin-bottom: 0.5rem;">Upload Image or WhatsApp Forward Screenshot</label>
+            <input type="file" id="image-file" accept="image/*" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+            <span class="input-hint">Runs OCR text extraction, Error Level Analysis (ELA) & visual manipulation detection.</span>
+          </div>
+
+          <!-- Progress Loader Box -->
+          <div id="progress-box" class="progress-box">
+            <p id="progress-status" style="color: #a855f7; margin-bottom: 8px; font-weight: 500;">Initializing AI analysis...</p>
+            <div style="width: 100%; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+              <div id="progress-bar" class="progress-bar"></div>
+            </div>
+          </div>
+
+          <button type="submit" id="submit-btn" class="btn-primary" style="padding: 0.8rem 1.5rem; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 1.5rem;">
+            Run 360° TruthLens Deep Scan
           </button>
         </form>
-
-        <div id="result-display" style="margin-top: 1.5rem; text-align: center;"></div>
       </div>
     </main>
   </div>
