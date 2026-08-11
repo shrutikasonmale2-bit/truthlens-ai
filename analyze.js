@@ -1,122 +1,168 @@
 import { auth, db, collection, addDoc, serverTimestamp, onAuthStateChanged } from './firebase.js';
 
-// 🚨 1. MP3 Audio Object
-const sirenAudio = new Audio('siren.mp3');
-
-// 🔊 2. Backup Digital Sound Generator (MP3 न चालल्यास हा १००% वाजतो)
-function playFallbackAlarm() {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const audioCtx = new AudioContext();
-
-    [0, 0.2, 0.4].forEach((time) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(900, audioCtx.currentTime + time);
-      osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + time + 0.15);
-
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime + time);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + time + 0.15);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start(audioCtx.currentTime + time);
-      osc.stop(audioCtx.currentTime + time + 0.15);
-    });
-  } catch (err) {
-    console.log("Audio Context Error:", err);
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('analyze-form');
   if (!form) return;
 
-  // Login Check
+  // 1. Auth Status Check
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      alert('Please log in first!');
+      alert('Please log in first to analyze content!');
       window.location.href = 'login.html';
     }
   });
 
+  // 2. Tab Switcher Logic (Supports Text, URL, Reels/Video, Image/OCR)
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+  let activeTabType = 'text';
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+
+      btn.classList.add('active');
+      const targetId = btn.getAttribute('data-tab');
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) targetElement.classList.add('active');
+
+      // Map tab IDs to API Types
+      if (targetId === 'text-tab') activeTabType = 'text';
+      else if (targetId === 'url-tab') activeTabType = 'url';
+      else if (targetId === 'reels-tab' || targetId === 'video-tab') activeTabType = 'reel';
+      else if (targetId === 'image-tab') activeTabType = 'image';
+      else if (targetId === 'media-tab') activeTabType = 'media';
+    });
+  });
+
+  // 3. Form Submit with Real-Time Multi-Media Pipeline
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // sound Preload
-    sirenAudio.load();
-
     const currentUser = auth.currentUser;
-    if (!currentUser) return;
-
-    const textContent = document.getElementById('content-input')?.value.trim() || '';
-    const fileInput = document.getElementById('file-input');
-    const file = fileInput?.files[0];
-
-    if (!textContent && !file) {
-      alert('Please enter text or select a file!');
+    if (!currentUser) {
+      alert('You must be logged in to perform an analysis.');
       return;
     }
 
-    const loading = document.getElementById('loading-indicator');
-    let resultDisplay = document.getElementById('result-display');
+    // Input Elements
+    const textInput = document.getElementById('text-input')?.value.trim() || '';
+    const urlInput = document.getElementById('url-input')?.value.trim() || '';
+    const reelUrlInput = document.getElementById('reel-url')?.value.trim() || '';
+    const fileInput = document.getElementById('file-input')?.files[0] || 
+                      document.getElementById('image-file')?.files[0] || 
+                      document.getElementById('video-file')?.files[0];
 
-    if (!resultDisplay) {
-      resultDisplay = document.createElement('div');
-      resultDisplay.id = 'result-display';
-      form.appendChild(resultDisplay);
+    let requestBody = null;
+    let formData = null;
+    let snippet = '';
+
+    // Determine Payload & Data Type
+    if (activeTabType === 'text') {
+      if (!textInput) return alert('कृपया आधी टेक्स्ट टाका!');
+      snippet = textInput.substring(0, 80);
+      requestBody = JSON.stringify({ type: 'text', content: textInput });
+
+    } else if (activeTabType === 'url') {
+      if (!urlInput) return alert('कृपया आधी Web URL टाका!');
+      snippet = urlInput;
+      requestBody = JSON.stringify({ type: 'url', content: urlInput });
+
+    } else if (activeTabType === 'reel' || activeTabType === 'video') {
+      formData = new FormData();
+      if (reelUrlInput) {
+        snippet = reelUrlInput;
+        formData.append('type', 'reel');
+        formData.append('reel_url', reelUrlInput);
+      } else if (fileInput) {
+        snippet = fileInput.name;
+        formData.append('type', 'video');
+        formData.append('file', fileInput);
+      } else {
+        return alert('कृपया Instagram Reel link किंवा Video File अपलोड करा!');
+      }
+
+    } else if (activeTabType === 'image' || activeTabType === 'media') {
+      if (!fileInput) return alert('कृपया इमेज किंवा स्क्रीनशॉट निवडा!');
+      snippet = fileInput.name;
+      const isVideo = fileInput.type.startsWith('video');
+      const mediaType = isVideo ? 'video' : 'image';
+      
+      formData = new FormData();
+      formData.append('type', mediaType);
+      formData.append('file', fileInput);
     }
 
-    if (loading) loading.style.display = 'block';
-    resultDisplay.innerHTML = '';
+    // UI Loading & Scanning Animation Setup
+    const progressBox = document.getElementById('progress-box');
+    const progressBar = document.getElementById('progress-bar');
+    const progressStatus = document.getElementById('progress-status');
+    const submitBtn = document.getElementById('submit-btn');
+
+    if (progressBox) progressBox.style.display = 'block';
+    if (submitBtn) submitBtn.disabled = true;
+
+    // Dynamic Step Messages based on Content Type
+    const steps = [
+      { p: '25%', msg: activeTabType === 'image' ? 'Extracting OCR text & metadata...' : 'Extracting content & parsing source...' },
+      { p: '60%', msg: activeTabType === 'reel' || activeTabType === 'video' ? 'Running facial lip-sync & voice clone scanner...' : 'Analyzing linguistic indicators & ML model...' },
+      { p: '88%', msg: 'Calculating Digital Trust Score & Risk Index...' }
+    ];
+
+    let currentStep = 0;
+    const stepInterval = setInterval(() => {
+      if (currentStep < steps.length) {
+        if (progressBar) progressBar.style.width = steps[currentStep].p;
+        if (progressStatus) progressStatus.innerText = steps[currentStep].msg;
+        currentStep++;
+      }
+    }, 600);
 
     try {
-      let contentType = file ? (file.type.startsWith('video') ? 'video' : 'image') : 'text';
-      let snippet = file ? file.name : textContent.substring(0, 100);
-      
-      // 🎯 High Risk Demo Data
-      let data = { label: 'FAKE', isFake: true, confidence: 88.5 };
+      let response;
+      if (formData) {
+        response = await fetch('http://127.0.0.1:5000/predict', {
+          method: 'POST',
+          body: formData
+        });
+      } else {
+        response = await fetch('http://127.0.0.1:5000/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: requestBody
+        });
+      }
 
-      // Save to Session Storage & Firestore
+      if (!response.ok) throw new Error(`Server returned status: ${response.status}`);
+
+      const data = await response.json();
+
+      clearInterval(stepInterval);
+      if (progressBar) progressBar.style.width = '100%';
+      if (progressStatus) progressStatus.innerText = 'Analysis Complete! Redirecting...';
+
+      // Save Output Data to SessionStorage & Firebase Firestore
       sessionStorage.setItem('latestResult', JSON.stringify(data));
+
       await addDoc(collection(db, 'analyses'), {
         userId: currentUser.uid,
-        contentType: contentType,
+        contentType: activeTabType,
         contentSnippet: snippet,
         result: data,
         createdAt: serverTimestamp()
       });
 
-      // 🚨 sound trigger with Fallback
-      sirenAudio.currentTime = 0;
-      const playPromise = sirenAudio.play();
-
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn("MP3 play blocked/failed, switching to fallback sound:", err);
-          // MP3 चा आवाज न आल्यास बॅकअप साउंड वाजेल
-          playFallbackAlarm();
-        });
-      }
-
-      // 🚨 Red High Risk UI
-      resultDisplay.innerHTML = `
-        <div style="background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; border-radius: 12px; padding: 1.5rem; text-align: center; color: #fca5a5; margin-top: 1.5rem;">
-          <h2 style="color: #ef4444; margin-bottom: 0.5rem; font-size: 1.5rem;">🚨 HIGH RISK DETECTED!</h2>
-          <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem;">Warning: This content appears to be Fake or Manipulated.</p>
-          <p style="font-size: 0.9rem; color: #f87171; margin: 0;">Trust Score: <b>11.5% (Critical Risk)</b></p>
-        </div>
-      `;
+      setTimeout(() => {
+        window.location.href = 'result.html';
+      }, 600);
 
     } catch (err) {
-      console.error("Submission Error:", err);
-      alert('Error: ' + err.message);
-    } finally {
-      if (loading) loading.style.display = 'none';
+      clearInterval(stepInterval);
+      console.error("Analysis Error:", err);
+      alert('Analysis Failed: ' + err.message);
+      if (progressBox) progressBox.style.display = 'none';
+      if (submitBtn) submitBtn.disabled = false;
     }
   });
 });
