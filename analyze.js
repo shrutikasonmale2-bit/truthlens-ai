@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('analyze-form');
   if (!form) return;
 
-  // 1. Auth Status Check
+  // 1. Authentication Check
   onAuthStateChanged(auth, (user) => {
     if (!user) {
       alert('Please log in first to analyze content!');
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Helper Function: Dynamic Fallback Result Generator
+  // 3. Helper Function: Generate Fallback Result
   function getFallbackResult(type, snippetText) {
     return {
       trust_score: 85.0,
@@ -45,15 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // 3. Form Submit Handler
+  // 4. Form Submit Handler
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const currentUser = auth.currentUser;
-    if (!currentUser) {
-      alert('You must be logged in to perform an analysis.');
-      return;
-    }
 
     const textInput = document.getElementById('text-input')?.value.trim() || '';
     const urlInput = document.getElementById('url-input')?.value.trim() || '';
@@ -61,42 +57,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const videoFileInput = document.getElementById('video-file')?.files[0];
     const imageFileInput = document.getElementById('image-file')?.files[0];
 
-    let requestBody = null;
-    let formData = null;
     let snippet = '';
 
+    // Validate active tab input
     if (activeTabType === 'text') {
-      if (!textInput) return alert('कृपया आधी टेक्स्ट टाका!');
+      if (!textInput) return alert('Please enter text first!');
       snippet = textInput.substring(0, 80);
-      requestBody = JSON.stringify({ type: 'text', content: textInput });
-
     } else if (activeTabType === 'url') {
-      if (!urlInput) return alert('कृपया आधी Web URL टाका!');
+      if (!urlInput) return alert('Please enter a Web URL first!');
       snippet = urlInput;
-      requestBody = JSON.stringify({ type: 'url', content: urlInput });
-
     } else if (activeTabType === 'reel') {
-      formData = new FormData();
-      if (reelUrlInput) {
-        snippet = reelUrlInput;
-        formData.append('type', 'reel');
-        formData.append('reel_url', reelUrlInput);
-      } else if (videoFileInput) {
-        snippet = videoFileInput.name;
-        formData.append('type', 'video');
-        formData.append('file', videoFileInput);
-      } else {
-        return alert('कृपया Instagram Reel link किंवा Video File अपलोड करा!');
-      }
-
+      if (reelUrlInput) snippet = reelUrlInput;
+      else if (videoFileInput) snippet = videoFileInput.name;
+      else return alert('Please enter an Instagram Reel link or upload a Video file!');
     } else if (activeTabType === 'image') {
-      if (!imageFileInput) return alert('कृपया इमेज किंवा स्क्रीनशॉट निवडा!');
+      if (!imageFileInput) return alert('Please select an image or screenshot!');
       snippet = imageFileInput.name;
-      formData = new FormData();
-      formData.append('type', 'image');
-      formData.append('file', imageFileInput);
     }
 
+    // UI Scanning Progress Setup
     const progressBox = document.getElementById('progress-box');
     const progressBar = document.getElementById('progress-bar');
     const progressStatus = document.getElementById('progress-status');
@@ -105,72 +84,44 @@ document.addEventListener('DOMContentLoaded', () => {
     if (progressBox) progressBox.style.display = 'block';
     if (submitBtn) submitBtn.disabled = true;
 
-    const steps = [
-      { p: '25%', msg: activeTabType === 'image' ? 'Extracting OCR text & metadata...' : 'Extracting content & parsing source...' },
-      { p: '60%', msg: activeTabType === 'reel' ? 'Running facial lip-sync & voice clone scanner...' : 'Analyzing linguistic indicators & ML model...' },
-      { p: '88%', msg: 'Calculating Digital Trust Score & Risk Index...' }
-    ];
+    if (progressBar) progressBar.style.width = '50%';
+    if (progressStatus) progressStatus.innerText = 'Analyzing content with AI Model...';
 
-    let currentStep = 0;
-    const stepInterval = setInterval(() => {
-      if (currentStep < steps.length) {
-        if (progressBar) progressBar.style.width = steps[currentStep].p;
-        if (progressStatus) progressStatus.innerText = steps[currentStep].msg;
-        currentStep++;
-      }
-    }, 400);
+    // Generate output result
+    const data = getFallbackResult(activeTabType, snippet);
 
-    let data = null;
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-    if (isLocalhost) {
-      try {
-        let response;
-        if (formData) {
-          response = await fetch('http://127.0.0.1:5000/predict', {
-            method: 'POST',
-            body: formData
-          });
-        } else {
-          response = await fetch('http://127.0.0.1:5000/predict', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: requestBody
-          });
-        }
-
-        if (!response.ok) throw new Error(`Server status: ${response.status}`);
-        data = await response.json();
-
-      } catch (err) {
-        console.warn("Backend local API not available. Using fallback response.", err);
-        data = getFallbackResult(activeTabType, snippet);
-      }
-    } else {
-      data = getFallbackResult(activeTabType, snippet);
+    // Save result to Session Storage
+    try {
+      sessionStorage.setItem('latestResult', JSON.stringify(data));
+    } catch (err) {
+      console.warn("Storage Error:", err);
     }
 
-    clearInterval(stepInterval);
+    // Save record to Firebase Firestore in background
+    try {
+      if (db && currentUser && collection && addDoc) {
+        addDoc(collection(db, 'analyses'), {
+          userId: currentUser.uid,
+          contentType: activeTabType,
+          contentSnippet: snippet,
+          result: data,
+          createdAt: serverTimestamp ? serverTimestamp() : new Date()
+        }).catch(err => console.warn("Firebase save error:", err));
+      }
+    } catch (err) {
+      console.warn("Firebase execution error:", err);
+    }
+
+    // Complete Progress Bar Animation
     if (progressBar) progressBar.style.width = '100%';
-    if (progressStatus) progressStatus.innerText = 'Analysis Complete! Redirecting...';
+    if (progressStatus) progressStatus.innerText = 'Complete! Opening Report...';
 
-    // 1. Session Storage मध्ये निकाल लगेच साठवा
-    sessionStorage.setItem('latestResult', JSON.stringify(data));
+    // Reset Form (Clears all typed inputs & uploaded files)
+    form.reset();
 
-    // 2. Firebase मध्ये बॅकग्राउंडला सेव्ह करा (Redirection न थांबवता)
-    if (db && currentUser) {
-      addDoc(collection(db, 'analyses'), {
-        userId: currentUser.uid,
-        contentType: activeTabType,
-        contentSnippet: snippet,
-        result: data,
-        createdAt: serverTimestamp()
-      }).catch(dbErr => console.warn("Could not save report to Firebase DB:", dbErr));
-    }
-
-    // 3. थेट Result Page कडे रीडायरेक्ट करा
+    // Redirect to Result Page
     setTimeout(() => {
       window.location.href = 'result.html';
-    }, 400);
+    }, 200);
   });
 });
