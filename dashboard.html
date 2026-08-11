@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - TruthLens AI</title>
-   <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=1">
   <link rel="stylesheet" href="dashboard.css?v=1">
 </head>
 <body>
@@ -47,19 +47,16 @@
   </div>
 
   <script type="module">
-    // auth.js चा import काढून फक्त firebase.js चा वापर केला आहे
-    import { auth, db, collection, getDocs, query, where, onAuthStateChanged } from './js/firebase.js';
+    // Path बदलून थेट './firebase.js' केली आहे (कारण js फोल्डर नाहीये)
+    import { auth, db, collection, getDocs, query, where, onAuthStateChanged } from './firebase.js';
 
-    // १. युझर ऑथेंटिकेशन आणि डेटा फेचिंग एकत्र
     onAuthStateChanged(auth, async (user) => {
-      // जर युझर लॉगिन नसेल तर थेट लॉगिन पेजवर पाठवा
       if (!user) {
         window.location.href = 'login.html';
         return;
       }
 
       try {
-        // २. Firestore मधून युझरचे सर्व analyses मागवणे
         const q = query(collection(db, 'analyses'), where('userId', '==', user.uid));
         const querySnapshot = await getDocs(q);
 
@@ -67,10 +64,9 @@
         let safeCount = 0;
         let riskyCount = 0;
 
-        // ३. Trust Score चे मोजमाप
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          const score = data.result?.trust_score ?? data.result?.score ?? 0;
+          const score = data.result?.trust_score ?? data.result?.score ?? data.trust_score ?? data.score ?? 0;
 
           if (score >= 70) {
             safeCount++;
@@ -79,10 +75,9 @@
           }
         });
 
-        // ४. Dashboard वरील आकडे अपडेट करणे
-        document.getElementById('stat-total').innerText = totalCount;
-        document.getElementById('stat-safe').innerText = safeCount;
-        document.getElementById('stat-risky').innerText = riskyCount;
+        document.getElementById('stat-total').textContent = totalCount;
+        document.getElementById('stat-safe').textContent = safeCount;
+        document.getElementById('stat-risky').textContent = riskyCount;
 
       } catch (error) {
         console.error("Dashboard metrics load error:", error);
