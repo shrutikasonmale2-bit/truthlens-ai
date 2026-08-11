@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetElement = document.getElementById(targetId);
       if (targetElement) targetElement.classList.add('active');
 
-      // Map tab IDs to API Types
       if (targetId === 'text-tab') activeTabType = 'text';
       else if (targetId === 'url-tab') activeTabType = 'url';
       else if (targetId === 'reels-tab') activeTabType = 'reel';
@@ -56,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Input Elements (Matching your analyze.html IDs)
     const textInput = document.getElementById('text-input')?.value.trim() || '';
     const urlInput = document.getElementById('url-input')?.value.trim() || '';
     const reelUrlInput = document.getElementById('reel-url')?.value.trim() || '';
@@ -67,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let formData = null;
     let snippet = '';
 
-    // Determine Payload & Data Type
     if (activeTabType === 'text') {
       if (!textInput) return alert('कृपया आधी टेक्स्ट टाका!');
       snippet = textInput.substring(0, 80);
@@ -100,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('file', imageFileInput);
     }
 
-    // UI Loading & Progress Animation Setup
     const progressBox = document.getElementById('progress-box');
     const progressBar = document.getElementById('progress-bar');
     const progressStatus = document.getElementById('progress-status');
@@ -109,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (progressBox) progressBox.style.display = 'block';
     if (submitBtn) submitBtn.disabled = true;
 
-    // Dynamic Step Messages
     const steps = [
       { p: '25%', msg: activeTabType === 'image' ? 'Extracting OCR text & metadata...' : 'Extracting content & parsing source...' },
       { p: '60%', msg: activeTabType === 'reel' ? 'Running facial lip-sync & voice clone scanner...' : 'Analyzing linguistic indicators & ML model...' },
@@ -123,11 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (progressStatus) progressStatus.innerText = steps[currentStep].msg;
         currentStep++;
       }
-    }, 500);
+    }, 400);
 
     let data = null;
-
-    // Localhost / Online Detection to avoid console errors on Live Deployment
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     if (isLocalhost) {
@@ -154,34 +147,30 @@ document.addEventListener('DOMContentLoaded', () => {
         data = getFallbackResult(activeTabType, snippet);
       }
     } else {
-      // Live Site (GitHub Pages) साठी थेट फॉलबॅक वापरा
       data = getFallbackResult(activeTabType, snippet);
     }
 
-    // Complete Progress Bar Animation
     clearInterval(stepInterval);
     if (progressBar) progressBar.style.width = '100%';
     if (progressStatus) progressStatus.innerText = 'Analysis Complete! Redirecting...';
 
-    // Save Data to Session Storage for result.html
+    // 1. Session Storage मध्ये निकाल लगेच साठवा
     sessionStorage.setItem('latestResult', JSON.stringify(data));
 
-    // Save Record to Firebase Firestore
-    try {
-      await addDoc(collection(db, 'analyses'), {
+    // 2. Firebase मध्ये बॅकग्राउंडला सेव्ह करा (Redirection न थांबवता)
+    if (db && currentUser) {
+      addDoc(collection(db, 'analyses'), {
         userId: currentUser.uid,
         contentType: activeTabType,
         contentSnippet: snippet,
         result: data,
         createdAt: serverTimestamp()
-      });
-    } catch (dbErr) {
-      console.warn("Could not save report to Firebase DB:", dbErr);
+      }).catch(dbErr => console.warn("Could not save report to Firebase DB:", dbErr));
     }
 
-    // Redirect to Result Page
+    // 3. थेट Result Page कडे रीडायरेक्ट करा
     setTimeout(() => {
       window.location.href = 'result.html';
-    }, 600);
+    }, 400);
   });
 });
