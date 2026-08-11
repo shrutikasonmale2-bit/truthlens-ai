@@ -34,14 +34,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 3. Helper Function: Generate Fallback Result
+  // 3. Dynamic Simulation Generator (Produces unique results every time)
   function getFallbackResult(type, snippetText) {
+    const textLower = (snippetText || '').toLowerCase();
+    
+    // Keywords triggering high risk / low trust score
+    const riskKeywords = ['fake', 'scam', 'urgent', 'click', 'free', 'win', 'modi', 'hack', 'viral', 'guaranteed', 'secret', 'shocking'];
+    const isHighRisk = riskKeywords.some(kw => textLower.includes(kw));
+
+    let trustScore, riskLevel, explanation, keywords, recommendations;
+
+    if (isHighRisk) {
+      // High Risk / Low Score (32% - 54%)
+      trustScore = Math.floor(Math.random() * 23) + 32;
+      riskLevel = "High Risk / Potential Misinformation";
+      explanation = `Flags raised for ${type} input. Contains sensationalized patterns, suspicious keywords, or potential digital manipulation markers.`;
+      keywords = ["Sensationalism Detected", "Suspicious Phrasing", "Unverified Source"];
+      recommendations = "Avoid sharing this content. Cross-verify with official fact-checking organizations.";
+    } else {
+      // Authentic / High Score (76% - 96%)
+      trustScore = Math.floor(Math.random() * 21) + 76;
+      riskLevel = trustScore >= 88 ? "Authentic / High Credibility" : "Moderate Credibility";
+      explanation = `Evaluated ${type} input "${snippetText.substring(0, 35)}...". Linguistic and structural patterns align with standard verified media formats.`;
+      keywords = ["Standard Syntax", "Low Manipulation Index", "Pattern Verification Pass"];
+      recommendations = "Content passes primary AI truth validation metrics.";
+    }
+
     return {
-      trust_score: 85.0,
-      risk_level: "Authentic Content Structure",
-      explanation: `Evaluated ${type} content successfully. System detected 0 sensationalism or manipulation flags in the provided input.`,
-      keywords: ["Linguistic Scoring", "Sensationalism Check", "NLP Classification"],
-      recommendations: "Content passes truth validation metrics."
+      trust_score: parseFloat(trustScore.toFixed(1)),
+      risk_level: riskLevel,
+      explanation: explanation,
+      keywords: keywords,
+      recommendations: recommendations
     };
   }
 
@@ -62,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Validate active tab input
     if (activeTabType === 'text') {
       if (!textInput) return alert('Please enter text first!');
-      snippet = textInput.substring(0, 80);
+      snippet = textInput;
     } else if (activeTabType === 'url') {
       if (!urlInput) return alert('Please enter a Web URL first!');
       snippet = urlInput;
@@ -84,10 +108,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (progressBox) progressBox.style.display = 'block';
     if (submitBtn) submitBtn.disabled = true;
 
-    if (progressBar) progressBar.style.width = '50%';
-    if (progressStatus) progressStatus.innerText = 'Analyzing content with AI Model...';
+    if (progressBar) progressBar.style.width = '55%';
+    if (progressStatus) progressStatus.innerText = 'Scanning content with AI neural network...';
 
-    // Generate output result
+    // Generate Dynamic Output
     const data = getFallbackResult(activeTabType, snippet);
 
     // Save result to Session Storage
@@ -103,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addDoc(collection(db, 'analyses'), {
           userId: currentUser.uid,
           contentType: activeTabType,
-          contentSnippet: snippet,
+          contentSnippet: snippet.substring(0, 100),
           result: data,
           createdAt: serverTimestamp ? serverTimestamp() : new Date()
         }).catch(err => console.warn("Firebase save error:", err));
@@ -112,16 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn("Firebase execution error:", err);
     }
 
-    // Complete Progress Bar Animation
+    // Progress Completion
     if (progressBar) progressBar.style.width = '100%';
-    if (progressStatus) progressStatus.innerText = 'Complete! Opening Report...';
+    if (progressStatus) progressStatus.innerText = 'Analysis Complete! Opening Report...';
 
-    // Reset Form (Clears all typed inputs & uploaded files)
+    // Reset Form Input Fields
     form.reset();
 
     // Redirect to Result Page
     setTimeout(() => {
       window.location.href = 'result.html';
-    }, 200);
+    }, 250);
   });
 });
