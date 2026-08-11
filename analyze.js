@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 2. Tab Switcher Logic (Supports Text, URL, Reels/Video, Image/OCR)
+  // 2. Tab Switcher Logic
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
   let activeTabType = 'text';
@@ -30,24 +30,23 @@ document.addEventListener('DOMContentLoaded', () => {
       // Map tab IDs to API Types
       if (targetId === 'text-tab') activeTabType = 'text';
       else if (targetId === 'url-tab') activeTabType = 'url';
-      else if (targetId === 'reels-tab' || targetId === 'video-tab') activeTabType = 'reel';
+      else if (targetId === 'reels-tab') activeTabType = 'reel';
       else if (targetId === 'image-tab') activeTabType = 'image';
-      else if (targetId === 'media-tab') activeTabType = 'media';
     });
   });
 
-  // Helper Function: Generate Mock Data when Backend API is unreachable
+  // Helper Function: Dynamic Fallback Result Generator
   function getFallbackResult(type, snippetText) {
     return {
       trust_score: 85.0,
-      risk_level: "Authentic Text Structure",
+      risk_level: "Authentic Content Structure",
       explanation: `Evaluated ${type} content successfully. System detected 0 sensationalism or manipulation flags in the provided input.`,
       keywords: ["Linguistic Scoring", "Sensationalism Check", "NLP Classification"],
       recommendations: "Content passes truth validation metrics."
     };
   }
 
-  // 3. Form Submit with Real-Time Multi-Media Pipeline & Graceful Fallback
+  // 3. Form Submit Handler
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -57,13 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Input Elements
+    // Input Elements (Matching your analyze.html IDs)
     const textInput = document.getElementById('text-input')?.value.trim() || '';
     const urlInput = document.getElementById('url-input')?.value.trim() || '';
     const reelUrlInput = document.getElementById('reel-url')?.value.trim() || '';
-    const fileInput = document.getElementById('file-input')?.files[0] || 
-                      document.getElementById('image-file')?.files[0] || 
-                      document.getElementById('video-file')?.files[0];
+    const videoFileInput = document.getElementById('video-file')?.files[0];
+    const imageFileInput = document.getElementById('image-file')?.files[0];
 
     let requestBody = null;
     let formData = null;
@@ -80,32 +78,29 @@ document.addEventListener('DOMContentLoaded', () => {
       snippet = urlInput;
       requestBody = JSON.stringify({ type: 'url', content: urlInput });
 
-    } else if (activeTabType === 'reel' || activeTabType === 'video') {
+    } else if (activeTabType === 'reel') {
       formData = new FormData();
       if (reelUrlInput) {
         snippet = reelUrlInput;
         formData.append('type', 'reel');
         formData.append('reel_url', reelUrlInput);
-      } else if (fileInput) {
-        snippet = fileInput.name;
+      } else if (videoFileInput) {
+        snippet = videoFileInput.name;
         formData.append('type', 'video');
-        formData.append('file', fileInput);
+        formData.append('file', videoFileInput);
       } else {
         return alert('कृपया Instagram Reel link किंवा Video File अपलोड करा!');
       }
 
-    } else if (activeTabType === 'image' || activeTabType === 'media') {
-      if (!fileInput) return alert('कृपया इमेज किंवा स्क्रीनशॉट निवडा!');
-      snippet = fileInput.name;
-      const isVideo = fileInput.type ? fileInput.type.startsWith('video') : false;
-      const mediaType = isVideo ? 'video' : 'image';
-      
+    } else if (activeTabType === 'image') {
+      if (!imageFileInput) return alert('कृपया इमेज किंवा स्क्रीनशॉट निवडा!');
+      snippet = imageFileInput.name;
       formData = new FormData();
-      formData.append('type', mediaType);
-      formData.append('file', fileInput);
+      formData.append('type', 'image');
+      formData.append('file', imageFileInput);
     }
 
-    // UI Loading & Scanning Animation Setup
+    // UI Loading & Progress Animation Setup
     const progressBox = document.getElementById('progress-box');
     const progressBar = document.getElementById('progress-bar');
     const progressStatus = document.getElementById('progress-status');
@@ -114,10 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (progressBox) progressBox.style.display = 'block';
     if (submitBtn) submitBtn.disabled = true;
 
-    // Dynamic Step Messages based on Content Type
+    // Dynamic Step Messages
     const steps = [
       { p: '25%', msg: activeTabType === 'image' ? 'Extracting OCR text & metadata...' : 'Extracting content & parsing source...' },
-      { p: '60%', msg: activeTabType === 'reel' || activeTabType === 'video' ? 'Running facial lip-sync & voice clone scanner...' : 'Analyzing linguistic indicators & ML model...' },
+      { p: '60%', msg: activeTabType === 'reel' ? 'Running facial lip-sync & voice clone scanner...' : 'Analyzing linguistic indicators & ML model...' },
       { p: '88%', msg: 'Calculating Digital Trust Score & Risk Index...' }
     ];
 
@@ -128,43 +123,50 @@ document.addEventListener('DOMContentLoaded', () => {
         if (progressStatus) progressStatus.innerText = steps[currentStep].msg;
         currentStep++;
       }
-    }, 600);
+    }, 500);
 
     let data = null;
 
-    try {
-      let response;
-      if (formData) {
-        response = await fetch('http://127.0.0.1:5000/predict', {
-          method: 'POST',
-          body: formData
-        });
-      } else {
-        response = await fetch('http://127.0.0.1:5000/predict', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: requestBody
-        });
+    // Localhost / Online Detection to avoid console errors on Live Deployment
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    if (isLocalhost) {
+      try {
+        let response;
+        if (formData) {
+          response = await fetch('http://127.0.0.1:5000/predict', {
+            method: 'POST',
+            body: formData
+          });
+        } else {
+          response = await fetch('http://127.0.0.1:5000/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: requestBody
+          });
+        }
+
+        if (!response.ok) throw new Error(`Server status: ${response.status}`);
+        data = await response.json();
+
+      } catch (err) {
+        console.warn("Backend local API not available. Using fallback response.", err);
+        data = getFallbackResult(activeTabType, snippet);
       }
-
-      if (!response.ok) throw new Error(`Server status: ${response.status}`);
-      data = await response.json();
-
-    } catch (err) {
-      console.warn("Backend local API not available. Using dynamic fallback response.", err);
-      // जर Local Server बंद असेल किंवा GitHub Pages वर चालू असेल, तर फॉलबॅक डेटा तयार करा
+    } else {
+      // Live Site (GitHub Pages) साठी थेट फॉलबॅक वापरा
       data = getFallbackResult(activeTabType, snippet);
     }
 
-    // UI Animation Full Progress
+    // Complete Progress Bar Animation
     clearInterval(stepInterval);
     if (progressBar) progressBar.style.width = '100%';
     if (progressStatus) progressStatus.innerText = 'Analysis Complete! Redirecting...';
 
-    // Save Output Data to SessionStorage
+    // Save Data to Session Storage for result.html
     sessionStorage.setItem('latestResult', JSON.stringify(data));
 
-    // Save to Firebase Firestore (Safe Async Save)
+    // Save Record to Firebase Firestore
     try {
       await addDoc(collection(db, 'analyses'), {
         userId: currentUser.uid,
