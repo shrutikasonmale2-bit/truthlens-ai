@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Real Gemini AI API Call Function
+  // Gemini AI API Call Function (Supports both English & Marathi output)
   async function analyzeWithGemini(type, snippetText) {
     console.log("Calling Gemini API with text:", snippetText);
 
@@ -49,16 +49,23 @@ document.addEventListener('DOMContentLoaded', () => {
       Analyze this content snippet (${type}): "${snippetText}"
 
       Evaluation Rules:
-      1. If the claim is fake news, conspiracy, or medically/scientifically wrong, assign a trust score below 35%.
-      2. If it is verified news or factually correct statement, assign a trust score above 80%.
+      1. If the input is too short, gibberish, or lacks a verifiable claim, set trust_score = 0, risk_level_en = "Insufficient Data", risk_level_mr = "अपुरी माहिती".
+      2. If the claim is fake news, conspiracy, or medically/scientifically wrong, assign a trust score below 35%.
+      3. If it is verified news or a factually correct statement, assign a trust score above 80%.
+
+      IMPORTANT: Provide all textual outputs in BOTH English AND Marathi languages.
 
       Return ONLY a JSON object:
       {
         "trust_score": <number between 0 and 100>,
-        "risk_level": "<High Risk / Potential Misinformation OR Moderate Credibility OR Authentic / High Credibility>",
-        "explanation": "<2 short factual sentences explaining why>",
-        "keywords": ["<Keyword1>", "<Keyword2>", "<Keyword3>"],
-        "recommendations": "<1 short actionable line>"
+        "risk_level_en": "<High Risk / Potential Misinformation OR Moderate Credibility OR Authentic / High Credibility OR Insufficient Data>",
+        "risk_level_mr": "<मराठीत जोखीम पातळी - उदा. उच्च जोखीम / असत्य माहिती OR मध्यम विश्वसनीयता OR अधिकृत / सत्य माहिती OR अपुरी माहिती>",
+        "explanation_en": "<2 short factual sentences in English>",
+        "explanation_mr": "<मराठीत २ स्पष्ट आणि सत्य वाक्ये>",
+        "keywords_en": ["<Keyword1_EN>", "<Keyword2_EN>"],
+        "keywords_mr": ["<Keyword1_MR>", "<Keyword2_MR>"],
+        "recommendations_en": "<1 short line in English>",
+        "recommendations_mr": "<मराठीत १ ओळीचा सल्ला>"
       }
     `;
 
@@ -89,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Strict Fallback Logic (Max 35% Score for Suspect Claims)
+  // Strict Fallback Logic with Dual-Language Fields
   function getFallbackResult(type, snippetText) {
     const textLower = (snippetText || '').toLowerCase();
     
@@ -104,19 +111,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isFake) {
       return {
         trust_score: 25.0,
-        risk_level: "High Risk / Potential Misinformation",
-        explanation: "Contains medical or scientific misinformation markers and unverified panic claims.",
-        keywords: ["Misinformation", "Unverified Claim", "High Risk"],
-        recommendations: "Do not share. Verify with standard health organizations."
+        risk_level_en: "High Risk / Potential Misinformation",
+        risk_level_mr: "उच्च जोखीम / असत्य माहिती",
+        explanation_en: "Contains medical or scientific misinformation markers and unverified panic claims.",
+        explanation_mr: "यामध्ये वैद्यकीय किंवा वैज्ञानिक चुकीची माहिती आणि अपुष्ट भीतीदायक दावे समाविष्ट आहेत.",
+        keywords_en: ["Misinformation", "Unverified Claim", "High Risk"],
+        keywords_mr: ["असत्य माहिती", "अपुष्ट दावा", "उच्च जोखीम"],
+        recommendations_en: "Do not share. Verify with standard health organizations.",
+        recommendations_mr: "शेअर करू नका. अधिकृत आरोग्य संस्थांकडून पडताळणी करा."
       };
     }
 
     return {
       trust_score: 45.0,
-      risk_level: "Needs Further Fact-Checking",
-      explanation: "Content requires manual fact-checking against primary news databases.",
-      keywords: ["Unverified Source", "Manual Verification Required"],
-      recommendations: "Cross-verify with authentic news agencies."
+      risk_level_en: "Needs Further Fact-Checking",
+      risk_level_mr: "पुढील पडताळणी आवश्यक",
+      explanation_en: "Content requires manual fact-checking against primary news databases.",
+      explanation_mr: "प्राथमिक बातम्यांच्या डेटाबेसवर सामग्रीची मॅन्युअल पडताळणी आवश्यक आहे.",
+      keywords_en: ["Unverified Source", "Manual Verification Required"],
+      keywords_mr: ["अपुष्ट स्रोत", "मॅन्युअल पडताळणी आवश्यक"],
+      recommendations_en: "Cross-verify with authentic news agencies.",
+      recommendations_mr: "अधिकृत वृत्त संस्थांकडून पडताळून पहा."
     };
   }
 
@@ -139,9 +154,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (activeTabType === 'text') {
       if (!textInput) return alert('Please enter text first!');
+
+      // FRONTEND VALIDATION: Require minimum 3 words and 15 characters
+      const wordCount = textInput.split(/\s+/).filter(word => word.length > 0).length;
+      if (wordCount < 3 || textInput.length < 15) {
+        alert('Please enter at least a full sentence or 3 to 4 words for analysis (e.g., news claim or statement).');
+        return;
+      }
+
       snippet = textInput;
     } else if (activeTabType === 'url') {
       if (!urlInput) return alert('Please enter a Web URL first!');
+      if (!urlInput.startsWith('http://') && !urlInput.startsWith('https://')) {
+        alert('Please enter a valid URL starting with http:// or https://');
+        return;
+      }
       snippet = urlInput;
     } else if (activeTabType === 'reel') {
       if (reelUrlInput) snippet = reelUrlInput;
@@ -158,8 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const ocrResult = await Tesseract.recognize(imageFileInput, 'eng');
         snippet = ocrResult.data.text.trim();
-        if (!snippet || snippet.length < 5) {
-          alert("Unable to extract clear text from image.");
+        if (!snippet || snippet.length < 15) {
+          alert("Extracted text from the image is too short to analyze. Please upload an image with clearer text.");
           if (submitBtn) submitBtn.disabled = false;
           if (progressBox) progressBox.style.display = 'none';
           return;
