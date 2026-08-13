@@ -1,12 +1,10 @@
 import { auth, db, collection, addDoc, serverTimestamp, onAuthStateChanged } from './firebase.js';
 
-// Line 4 Updated: नवीन Gemini API Key सेट केली आहे
-const GEMINI_API_KEY = "AIzaSyC6IyYaZNbDHTnljEeAkXERQ1So984zWI8";
-
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('analyze-form');
   if (!form) return;
 
+  // Firebase Auth चेक
   onAuthStateChanged(auth, (user) => {
     if (!user) {
       alert('Please log in first to analyze content!');
@@ -14,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // टॅब स्विचिंग लॉजिक
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
   let activeTabType = 'text';
@@ -35,119 +34,87 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Gemini AI API Call Function (Supports both English & Marathi output)
-  async function analyzeWithGemini(type, snippetText) {
-    console.log("Calling Gemini API with text:", snippetText);
+  // लोकल (Offline) ॲनालिसिस फंक्शन (Gemini API ऐवजी)
+  function analyzeLocally(type, snippetText) {
+    console.log("Analyzing locally (No API used):", snippetText);
 
-    if (!GEMINI_API_KEY) {
-      console.warn("No GEMINI_API_KEY found, using fallback logic");
-      return getFallbackResult(type, snippetText);
-    }
+    const textLower = (snippetText || '').toLowerCase().trim();
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
-
-    const prompt = `
-      You are an expert Forensic AI Fact-Checker. 
-      Analyze this content snippet (${type}): "${snippetText}"
-
-      Evaluation Rules:
-      1. If the input is too short, gibberish, or lacks a verifiable claim, set trust_score = 0, risk_level_en = "Insufficient Data", risk_level_mr = "अपुरी माहिती".
-      2. If the claim is fake news, conspiracy, or medically/scientifically wrong, assign a trust score below 35%.
-      3. If it is verified news or a factually correct statement, assign a trust score above 80%.
-
-      IMPORTANT: Provide all textual outputs in BOTH English AND Marathi languages.
-
-      Return ONLY a JSON object with no markdown formatting:
-      {
-        "trust_score": <number between 0 and 100>,
-        "risk_level_en": "<High Risk / Potential Misinformation OR Moderate Credibility OR Authentic / High Credibility OR Insufficient Data>",
-        "risk_level_mr": "<मराठीत जोखीम पातळी - उदा. उच्च जोखीम / असत्य माहिती OR मध्यम विश्वसनीयता OR अधिकृत / सत्य माहिती OR अपुरी माहिती>",
-        "explanation_en": "<2 short factual sentences in English>",
-        "explanation_mr": "<मराठीत २ स्पष्ट आणि सत्य वाक्ये>",
-        "keywords_en": ["<Keyword1_EN>", "<Keyword2_EN>"],
-        "keywords_mr": ["<Keyword1_MR>", "<Keyword2_MR>"],
-        "recommendations_en": "<1 short line in English>",
-        "recommendations_mr": "<मराठीत १ ओळीचा सल्ला>"
-      }
-    `;
-
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-goog-api-key': GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { response_mime_type: "application/json" }
-        })
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error("Gemini API Error Response:", errText);
-        throw new Error(`API status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!rawText) {
-        throw new Error("Invalid response format from Gemini API");
-      }
-
-      // Clean up markdown wrapping if present
-      rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-      console.log("Gemini Live Response:", rawText);
-      return JSON.parse(rawText);
-
-    } catch (error) {
-      console.error("Gemini API Call failed, switching to strict Fallback:", error);
-      return getFallbackResult(type, snippetText);
-    }
-  }
-
-  // Strict Fallback Logic with Dual-Language Fields
-  function getFallbackResult(type, snippetText) {
-    const textLower = (snippetText || '').toLowerCase();
-    
-    const fakeIndicators = [
-      'magnetic poles', '48 hours', 'reversal', 'antarctica', 'secretly hiding',
-      'cosmic radiation', 'shocking exposed', 'watch before deleted', '100% real',
-      'miracle', 'fake', 'scam', 'urgent', 'free win', 'destroys 100%', 'salt'
-    ];
-
-    const isFake = fakeIndicators.some(pattern => textLower.includes(pattern));
-
-    if (isFake) {
+    // १. खूप लहान किंवा अपुरा मजकूर असल्‍यास
+    if (!textLower || textLower.length < 15) {
       return {
-        trust_score: 25.0,
-        risk_level_en: "High Risk / Potential Misinformation",
-        risk_level_mr: "उच्च जोखीम / असत्य माहिती",
-        explanation_en: "Contains medical or scientific misinformation markers and unverified panic claims.",
-        explanation_mr: "यामध्ये वैद्यकीय किंवा वैज्ञानिक चुकीची माहिती आणि अपुष्ट भीतीदायक दावे समाविष्ट आहेत.",
-        keywords_en: ["Misinformation", "Unverified Claim", "High Risk"],
-        keywords_mr: ["असत्य माहिती", "अपुष्ट दावा", "उच्च जोखीम"],
-        recommendations_en: "Do not share. Verify with standard health organizations.",
-        recommendations_mr: "शेअर करू नका. अधिकृत आरोग्य संस्थांकडून पडताळणी करा."
+        trust_score: 0,
+        risk_level_en: "Insufficient Data",
+        risk_level_mr: "अपुरी माहिती",
+        explanation_en: "The content provided is too short or insufficient to perform a complete analysis.",
+        explanation_mr: "दिलेली माहिती अत्यंत अपुरी असल्यामुळे पूर्ण विश्लेषणासाठी पुरेशी नाही.",
+        keywords_en: ["Insufficient Data", "Unverified"],
+        keywords_mr: ["अपुरी माहिती", "अपुष्ट"],
+        recommendations_en: "Provide more context or a complete claim for better analysis.",
+        recommendations_mr: "अधिक स्पष्ट किंवा संपूर्ण मजकूर प्रविष्ट करा."
       };
     }
 
+    // २. संशयास्पद / फेक न्यूज दर्शक शब्द (Fake Indicators)
+    const fakeIndicators = [
+      'magnetic poles', '48 hours', 'reversal', 'antarctica', 'secretly hiding',
+      'cosmic radiation', 'shocking exposed', 'watch before deleted', '100% real',
+      'miracle', 'fake', 'scam', 'urgent', 'free win', 'destroys 100%', 'salt',
+      'forwarded many times', 'click here to win', 'cure for cancer', 'free recharge'
+    ];
+
+    // ३. विश्वसनीय / अधिकृत न्यूज दर्शक शब्द (Trusted Indicators)
+    const trustedIndicators = [
+      'official', 'government', 'pib', 'isro', 'nasa', 'who', 'rbi', 'published',
+      'press release', 'statement', 'research', 'university', 'report'
+    ];
+
+    const isFake = fakeIndicators.some(pattern => textLower.includes(pattern));
+    const isTrusted = trustedIndicators.some(pattern => textLower.includes(pattern));
+
+    if (isFake) {
+      return {
+        trust_score: 20.0,
+        risk_level_en: "High Risk / Potential Misinformation",
+        risk_level_mr: "उच्च जोखीम / असत्य माहिती",
+        explanation_en: "Contains potential misinformation indicators and unverified claims.",
+        explanation_mr: "या मजकुरात असत्य माहितीची लक्षणे आणि अपुष्ट दावे आढळले आहेत.",
+        keywords_en: ["Misinformation", "Unverified Claim", "High Risk"],
+        keywords_mr: ["असत्य माहिती", "अपुष्ट दावा", "उच्च जोखीम"],
+        recommendations_en: "Do not share. Cross-check with standard news or fact-checking websites.",
+        recommendations_mr: "हा मजकूर शेअर करू नका. अधिकृत बातम्यांच्या स्रोतांकडून पडताळणी करा."
+      };
+    }
+
+    if (isTrusted) {
+      return {
+        trust_score: 88.0,
+        risk_level_en: "Authentic / High Credibility",
+        risk_level_mr: "अधिकृत / सत्य माहिती",
+        explanation_en: "The content uses credible language and indicators associated with verified statements.",
+        explanation_mr: "हा मजकूर अधिकृत माहितीशी आणि पडताळणी केलेल्या स्रोतांशी सुसंगत वाटतो.",
+        keywords_en: ["Verified Source", "High Credibility", "Authentic"],
+        keywords_mr: ["पडताळलेला स्रोत", "उच्च विश्वसनीयता", "सत्य माहिती"],
+        recommendations_en: "Verified content, safe to reference.",
+        recommendations_mr: "माहिती योग्य वाटते, संदर्भासाठी वापरू शकता."
+      };
+    }
+
+    // ४. सामान्य / मध्यम धोका असलेला मजकूर
     return {
-      trust_score: 45.0,
-      risk_level_en: "Needs Further Fact-Checking",
-      risk_level_mr: "पुढील पडताळणी आवश्यक",
-      explanation_en: "Content requires manual fact-checking against primary news databases.",
-      explanation_mr: "प्राथमिक बातम्यांच्या डेटाबेसवर सामग्रीची मॅन्युअल पडताळणी आवश्यक आहे.",
-      keywords_en: ["Unverified Source", "Manual Verification Required"],
-      keywords_mr: ["अपुष्ट स्रोत", "मॅन्युअल पडताळणी आवश्यक"],
-      recommendations_en: "Cross-verify with authentic news agencies.",
-      recommendations_mr: "अधिकृत वृत्त संस्थांकडून पडताळून पहा."
+      trust_score: 50.0,
+      risk_level_en: "Moderate Credibility / Needs Verification",
+      risk_level_mr: "मध्यम विश्वसनीयता / पुढील पडताळणी आवश्यक",
+      explanation_en: "Content requires manual fact-checking against official sources.",
+      explanation_mr: "या माहितीची अधिकृत स्रोतांवरून स्वतः पडताळणी करणे आवश्यक आहे.",
+      keywords_en: ["Unverified Source", "Manual Check Needed"],
+      keywords_mr: ["अपुष्ट स्रोत", "पडताळणी आवश्यक"],
+      recommendations_en: "Cross-verify with authentic news agencies before believing.",
+      recommendations_mr: "विश्वास ठेवण्यापूर्वी अधिकृत वृत्त संस्थांकडून पडताळून पहा."
     };
   }
 
+  // फॉर्म सबमिट हाताळणी
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -175,11 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const wordCount = textInput.split(/\s+/).filter(word => word.length > 0).length;
       if (wordCount < 3 || textInput.length < 15) {
-        alert('Please enter at least a full sentence or 3 to 4 words for analysis (e.g., news claim or statement).');
+        alert('Please enter at least a full sentence or 3 to 4 words for analysis.');
         return;
       }
-
       snippet = textInput;
+
     } else if (activeTabType === 'url') {
       if (!urlInput) return alert('Please enter a Web URL first!');
       if (!urlInput.startsWith('http://') && !urlInput.startsWith('https://')) {
@@ -187,10 +154,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       snippet = urlInput;
+
     } else if (activeTabType === 'reel') {
       if (reelUrlInput) snippet = reelUrlInput;
       else if (videoFileInput) snippet = videoFileInput.name;
       else return alert('Please enter a video link or upload a file!');
+
     } else if (activeTabType === 'image') {
       if (!imageFileInput) return alert('Please select an image!');
 
@@ -205,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const ocrResult = await Tesseract.recognize(imageFileInput, 'eng');
         snippet = ocrResult.data.text.trim();
-        
+
         if (!snippet || snippet.length < 15) {
           alert("Extracted text from the image is too short to analyze. Please upload an image with clearer text.");
           resetUI();
@@ -221,19 +190,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (progressBox) progressBox.style.display = 'block';
     if (submitBtn) submitBtn.disabled = true;
     if (progressBar) progressBar.style.width = '50%';
-    if (progressStatus) progressStatus.innerText = 'Connecting to Gemini AI Fact-Checker...';
+    if (progressStatus) progressStatus.innerText = 'Analyzing Content Locally...';
 
-    const data = await analyzeWithGemini(activeTabType, snippet);
+    // लोकल ॲनालिसिस रन करणे
+    const data = analyzeLocally(activeTabType, snippet);
 
     if (progressBar) progressBar.style.width = '85%';
     if (progressStatus) progressStatus.innerText = 'Saving Analysis Results...';
 
+    // SessionStorage मध्ये सेव्ह करा
     try {
       sessionStorage.setItem('latestResult', JSON.stringify(data));
     } catch (err) {
       console.warn("Storage Error:", err);
     }
 
+    // Firestore मध्ये सेव्ह करा
     try {
       if (db && currentUser && collection && addDoc) {
         await addDoc(collection(db, 'analyses'), {
