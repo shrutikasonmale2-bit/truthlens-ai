@@ -42,7 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return getFallbackResult(type, snippetText);
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    // Updated to stable model endpoint
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
     const prompt = `
       You are an expert Forensic AI Fact-Checker. 
@@ -55,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       IMPORTANT: Provide all textual outputs in BOTH English AND Marathi languages.
 
-      Return ONLY a JSON object:
+      Return ONLY a JSON object with no markdown formatting:
       {
         "trust_score": <number between 0 and 100>,
         "risk_level_en": "<High Risk / Potential Misinformation OR Moderate Credibility OR Authentic / High Credibility OR Insufficient Data>",
@@ -86,7 +87,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
-      const rawText = data.candidates[0].content.parts[0].text;
+      let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!rawText) {
+        throw new Error("Invalid response format from Gemini API");
+      }
+
+      // Clean up markdown wrapping if present
+      rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
       console.log("Gemini Live Response:", rawText);
       return JSON.parse(rawText);
 
@@ -152,10 +161,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressStatus = document.getElementById('progress-status');
     const submitBtn = document.getElementById('submit-btn');
 
+    const resetUI = () => {
+      if (submitBtn) submitBtn.disabled = false;
+      if (progressBox) progressBox.style.display = 'none';
+    };
+
     if (activeTabType === 'text') {
       if (!textInput) return alert('Please enter text first!');
 
-      // FRONTEND VALIDATION: Require minimum 3 words and 15 characters
       const wordCount = textInput.split(/\s+/).filter(word => word.length > 0).length;
       if (wordCount < 3 || textInput.length < 15) {
         alert('Please enter at least a full sentence or 3 to 4 words for analysis (e.g., news claim or statement).');
@@ -183,16 +196,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (progressStatus) progressStatus.innerText = 'Scanning text from image (OCR)...';
 
       try {
+        if (typeof Tesseract === 'undefined') {
+          throw new Error("Tesseract library is not loaded.");
+        }
         const ocrResult = await Tesseract.recognize(imageFileInput, 'eng');
         snippet = ocrResult.data.text.trim();
+        
         if (!snippet || snippet.length < 15) {
           alert("Extracted text from the image is too short to analyze. Please upload an image with clearer text.");
-          if (submitBtn) submitBtn.disabled = false;
-          if (progressBox) progressBox.style.display = 'none';
+          resetUI();
           return;
         }
       } catch (err) {
         console.error("OCR Error:", err);
+        alert("Failed to process image OCR. Falling back to image file name.");
         snippet = imageFileInput.name;
       }
     }
