@@ -6,195 +6,69 @@
   <title>Analysis Result - TruthLens AI</title>
   <link rel="stylesheet" href="style.css?v=3">
   <style>
-    /* Forensic Analysis Report Page Layout Styles */
-    .report-container {
-      max-width: 1100px;
-      margin: 2rem auto;
-      padding: 0 1.5rem;
-    }
-
-    .report-header {
+    .report-container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+    .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .report-header h2 { font-size: 1.8rem; font-weight: 700; color: #ffffff; }
+    .subtitle { color: #9ca3af; font-size: 0.95rem; margin-top: 4px; }
+    
+    /* Language Switcher Buttons */
+    .lang-toggle {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
-    .report-header h2 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .subtitle {
-      color: var(--text-sub, #9ca3af);
-      font-size: 0.95rem;
-      margin-top: 4px;
-    }
-
-    .category-badge {
-      background: rgba(124, 58, 237, 0.25);
-      border: 1px solid rgba(124, 58, 237, 0.5);
-      color: #c084fc;
-      padding: 8px 18px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    /* 2x2 Grid Layout */
-    .report-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
-    }
-
-    @media (max-width: 768px) {
-      .report-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .report-card {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-      border-radius: 18px;
-      padding: 2rem;
-      backdrop-filter: blur(16px);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .flex-center {
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-
-    .card-title {
-      color: var(--text-sub, #9ca3af);
-      font-size: 0.95rem;
-      margin-bottom: 0.8rem;
-    }
-
-    .score-value {
-      font-size: 3.2rem;
-      font-weight: 700;
-      margin-bottom: 0.4rem;
-      transition: color 0.3s ease;
-    }
-
-    .status-value {
-      font-size: 1.8rem;
-      font-weight: 700;
-      line-height: 1.25;
-      margin-bottom: 0.4rem;
-      transition: color 0.3s ease;
-    }
-
-    .card-subtext {
-      color: #6b7280;
-      font-size: 0.85rem;
-    }
-
-    .report-card h3 {
-      font-size: 1.2rem;
-      color: #ffffff;
-      margin-bottom: 0.8rem;
-    }
-
-    .desc-text {
-      color: var(--text-sub, #9ca3af);
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin-bottom: 1.5rem;
-    }
-
-    .report-card h4 {
-      font-size: 0.9rem;
-      color: #ffffff;
-      margin-bottom: 0.8rem;
-    }
-
-    /* Indicator Tags */
-    .indicator-tags {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .tag {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #d1d5db;
+      border-radius: 20px;
+      padding: 3px;
+    }
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
       padding: 6px 14px;
-      border-radius: 8px;
-      font-size: 0.82rem;
-    }
-
-    /* Layered Breakdown Progress Bars */
-    .breakdown-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1.2rem;
-    }
-
-    .progress-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.88rem;
-      color: #d1d5db;
-      margin-bottom: 6px;
-    }
-
-    .progress-bar-bg {
-      width: 100%;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      border-radius: 10px;
-      transition: width 0.8s ease-in-out, background-color 0.4s ease;
-    }
-
-    .action-buttons {
-      margin-top: 2rem;
-      display: flex;
-      gap: 1rem;
-    }
-
-    .btn-primary {
-      background: #7c3aed;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 10px;
-      text-decoration: none;
+      border-radius: 16px;
+      cursor: pointer;
       font-weight: 600;
-      display: inline-block;
-      transition: background 0.2s;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
     }
-    .btn-primary:hover {
-      background: #6d28d9;
+    .lang-btn.active {
+      background: #7c3aed;
+      color: #ffffff;
     }
+
+    .report-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    @media (max-width: 768px) { .report-grid { grid-template-columns: 1fr; } }
+    .report-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; padding: 2rem; backdrop-filter: blur(16px); display: flex; flex-direction: column; }
+    .flex-center { align-items: center; justify-content: center; text-align: center; }
+    .card-title { color: #9ca3af; font-size: 0.95rem; margin-bottom: 0.8rem; }
+    .score-value { font-size: 3.2rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .status-value { font-size: 1.8rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.4rem; }
+    .desc-text { color: #9ca3af; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem; }
+    .indicator-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #d1d5db; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; }
+    .breakdown-list { display: flex; flex-direction: column; gap: 1.2rem; }
+    .progress-labels { display: flex; justify-content: space-between; font-size: 0.88rem; color: #d1d5db; margin-bottom: 6px; }
+    .progress-bar-bg { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.8s ease-in-out, background-color 0.4s ease; }
+    .action-buttons { margin-top: 2rem; display: flex; gap: 1rem; }
+    .btn-primary { background: #7c3aed; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block; }
   </style>
 </head>
 <body>
 
   <div class="report-container">
     
-    <!-- Top Header -->
+    <!-- Top Header with Language Toggle -->
     <div class="report-header">
       <div>
-        <h2>Forensic Analysis Report</h2>
-        <p class="subtitle">AI Multi-Layered Truth & Authenticity Evaluation</p>
+        <h2 id="heading-title">Forensic Analysis Report</h2>
+        <p class="subtitle" id="heading-subtitle">AI Multi-Layered Truth & Authenticity Evaluation</p>
       </div>
-      <span class="category-badge">Linguistic & Sentiment Forensics</span>
+
+      <!-- Language Toggle Buttons -->
+      <div class="lang-toggle">
+        <button id="btn-en" class="lang-btn active" onclick="switchLanguage('en')">English</button>
+        <button id="btn-mr" class="lang-btn" onclick="switchLanguage('mr')">मराठी</button>
+      </div>
     </div>
 
     <!-- 2x2 Grid Layout -->
@@ -202,24 +76,24 @@
       
       <!-- Top Left: Digital Trust Score -->
       <div class="report-card flex-center">
-        <span class="card-title">Digital Trust Score</span>
+        <span class="card-title" id="lbl-trust">Digital Trust Score</span>
         <div class="score-value" id="res-score">--%</div>
-        <span class="card-subtext" id="res-confidence-text">Model Confidence: 87.5%</span>
+        <span class="card-subtext">Model Confidence: 87.5%</span>
       </div>
 
       <!-- Top Right: Risk Assessment -->
       <div class="report-card flex-center">
-        <span class="card-title">Risk Assessment</span>
+        <span class="card-title" id="lbl-risk">Risk Assessment</span>
         <div class="status-value" id="res-risk">--</div>
-        <span class="card-subtext">Text Linguistic Scan Complete</span>
+        <span class="card-subtext" id="lbl-scan">Text Linguistic Scan Complete</span>
       </div>
 
       <!-- Bottom Left: Model Assessment -->
       <div class="report-card">
-        <h3>Model Assessment</h3>
+        <h3 id="lbl-assessment">Model Assessment</h3>
         <p class="desc-text" id="res-explanation">Loading analysis...</p>
         
-        <h4>Key Indicators Detected</h4>
+        <h4 id="lbl-indicators">Key Indicators Detected</h4>
         <div class="indicator-tags" id="res-keywords">
           <span class="tag">Loading...</span>
         </div>
@@ -227,12 +101,12 @@
 
       <!-- Bottom Right: Layered Score Breakdown -->
       <div class="report-card">
-        <h3>Layered Score Breakdown</h3>
+        <h3 id="lbl-breakdown">Layered Score Breakdown</h3>
         <div class="breakdown-list">
           
           <div class="progress-item">
             <div class="progress-labels">
-              <span>Linguistic Integrity</span>
+              <span id="lbl-ling">Linguistic Integrity</span>
               <span id="bar-score-text">--%</span>
             </div>
             <div class="progress-bar-bg">
@@ -242,7 +116,7 @@
 
           <div class="progress-item">
             <div class="progress-labels">
-              <span>Sensationalism Index</span>
+              <span id="lbl-sens">Sensationalism Index</span>
               <span id="sens-score-text">0%</span>
             </div>
             <div class="progress-bar-bg">
@@ -252,7 +126,7 @@
 
           <div class="progress-item">
             <div class="progress-labels">
-              <span>Source Verification</span>
+              <span id="lbl-source">Source Verification</span>
               <span id="source-score-text">0%</span>
             </div>
             <div class="progress-bar-bg">
@@ -267,113 +141,107 @@
 
     <!-- Navigation Buttons -->
     <div class="action-buttons">
-      <a href="analyze.html" class="btn-primary">Analyze Another Item</a>
-      <a href="#" onclick="window.print(); return false;" class="btn-primary" style="background: rgba(255,255,255,0.1);">Export Printable Report</a>
+      <a href="analyze.html" class="btn-primary" id="btn-analyze">Analyze Another Item</a>
+      <a href="#" onclick="window.print(); return false;" class="btn-primary" style="background: rgba(255,255,255,0.1);" id="btn-print">Export Printable Report</a>
     </div>
 
   </div>
 
   <script>
+    let globalData = null;
+    let currentLang = 'en'; // Default language is English
+
     document.addEventListener('DOMContentLoaded', () => {
       try {
         const raw = sessionStorage.getItem('latestResult');
-        console.log("Raw Session Data:", raw);
-
         if (!raw) {
           alert('No result found in Session! Please run an analysis first.');
-          document.getElementById('res-explanation').innerText = "No result available. Please run an analysis.";
           return;
         }
 
-        const data = JSON.parse(raw);
-        console.log("Parsed Data Object:", data);
-
-        // १. Trust Score value
-        const score = Math.round(data.trust_score ?? data.score ?? data.trustScore ?? 85);
-        document.getElementById('res-score').innerText = `${score}%`;
-
-        // २. Risk Rating text
-        const risk = data.risk_level ?? data.risk ?? data.risk_rating ?? 'Authentic Text Structure';
-        document.getElementById('res-risk').innerText = risk;
-
-        // ३. Dynamic Color & Theme Logic (Red for Risk < 40, Orange for 40-74, Green for >= 75)
-        let themeColor = '#22c55e'; // Green default
-        let shadowColor = 'rgba(34, 197, 94, 0.4)';
-
-        if (score < 40) {
-          themeColor = '#ef4444'; // Red for High Risk
-          shadowColor = 'rgba(239, 68, 68, 0.4)';
-        } else if (score >= 40 && score < 75) {
-          themeColor = '#f59e0b'; // Orange for Moderate Risk
-          shadowColor = 'rgba(245, 158, 11, 0.4)';
-        }
-
-        // Apply colors dynamically to Score & Risk elements
-        const scoreEl = document.getElementById('res-score');
-        const riskEl = document.getElementById('res-risk');
-        scoreEl.style.color = themeColor;
-        riskEl.style.color = themeColor;
-
-        // ४. Breakdown Bars Update
-        // Linguistic Bar matches overall score theme
-        const lingBarFill = document.getElementById('bar-score-fill');
-        const lingBarText = document.getElementById('bar-score-text');
-        lingBarText.innerText = `${score}%`;
-        lingBarText.style.color = themeColor;
-        lingBarFill.style.width = `${score}%`;
-        lingBarFill.style.backgroundColor = themeColor;
-        lingBarFill.style.boxShadow = `0 0 10px ${shadowColor}`;
-
-        // Sensationalism Index (Inverse of score roughly)
-        const sensScore = Math.max(10, 100 - score);
-        const sensBarFill = document.getElementById('sens-score-fill');
-        const sensBarText = document.getElementById('sens-score-text');
-        sensBarText.innerText = `${sensScore}%`;
-        sensBarFill.style.width = `${sensScore}%`;
-        let sensColor = score < 40 ? '#ef4444' : '#7c3aed'; // Red if high risk, purple otherwise
-        sensBarFill.style.backgroundColor = sensColor;
-
-        // Source Verification Bar
-        const sourceScore = score < 40 ? Math.max(15, score - 5) : score;
-        const sourceBarFill = document.getElementById('source-score-fill');
-        const sourceBarText = document.getElementById('source-score-text');
-        sourceBarText.innerText = `${sourceScore}%`;
-        sourceBarText.style.color = themeColor;
-        sourceBarFill.style.width = `${sourceScore}%`;
-        sourceBarFill.style.backgroundColor = themeColor;
-
-        // ५. Explanation text
-        const exp = data.explanation ?? data.assessment ?? data.message ?? 'Evaluated text structure successfully.';
-        document.getElementById('res-explanation').innerText = exp;
-
-        // ६. Keywords / Indicators - Tag badges
-        const kwContainer = document.getElementById('res-keywords');
-        const kw = data.keywords ?? data.indicators ?? ["Linguistic Scoring", "Sensationalism Check", "NLP Classification"];
-        
-        kwContainer.innerHTML = ''; 
-        if (Array.isArray(kw) && kw.length > 0) {
-          kw.forEach(item => {
-            const span = document.createElement('span');
-            span.className = 'tag';
-            span.innerText = item;
-            kwContainer.appendChild(span);
-          });
-        } else if (typeof kw === 'string') {
-          kw.split(',').forEach(item => {
-            const span = document.createElement('span');
-            span.className = 'tag';
-            span.innerText = item.trim();
-            kwContainer.appendChild(span);
-          });
-        } else {
-          kwContainer.innerHTML = '<span class="tag">None detected</span>';
-        }
+        globalData = JSON.parse(raw);
+        renderReport();
 
       } catch (err) {
-        console.error("Error parsing result data:", err);
-        alert("Failed to render output data. Check Console for details.");
+        console.error("Error loading data:", err);
       }
     });
+
+    function switchLanguage(lang) {
+      currentLang = lang;
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.getElementById('btn-mr').classList.toggle('active', lang === 'mr');
+      renderReport();
+    }
+
+    function renderReport() {
+      if (!globalData) return;
+
+      const score = Math.round(globalData.trust_score ?? globalData.score ?? 85);
+      
+      // Dynamic Colors
+      let themeColor = '#22c55e'; // Green
+      if (score < 40) themeColor = '#ef4444'; // Red
+      else if (score < 75) themeColor = '#f59e0b'; // Orange
+
+      document.getElementById('res-score').innerText = `${score}%`;
+      document.getElementById('res-score').style.color = themeColor;
+
+      // Select Language Specific Fields
+      const isMr = currentLang === 'mr';
+
+      document.getElementById('res-risk').innerText = isMr ? (globalData.risk_level_mr || globalData.risk_level) : (globalData.risk_level_en || globalData.risk_level);
+      document.getElementById('res-risk').style.color = themeColor;
+
+      document.getElementById('res-explanation').innerText = isMr ? (globalData.explanation_mr || globalData.explanation) : (globalData.explanation_en || globalData.explanation);
+
+      // Render Dynamic Labels on Page based on Language
+      document.getElementById('heading-title').innerText = isMr ? "फॉरेन्सिक विश्लेषण अहवाल" : "Forensic Analysis Report";
+      document.getElementById('heading-subtitle').innerText = isMr ? "AI बहुस्तरीय सत्यता आणि अचूकता मूल्यांकन" : "AI Multi-Layered Truth & Authenticity Evaluation";
+      document.getElementById('lbl-trust').innerText = isMr ? "डिजिटल विश्वासार्हता स्कोअर" : "Digital Trust Score";
+      document.getElementById('lbl-risk').innerText = isMr ? "जोखीम मूल्यांकन" : "Risk Assessment";
+      document.getElementById('lbl-scan').innerText = isMr ? "मजकूर तांत्रिक तपासणी पूर्ण" : "Text Linguistic Scan Complete";
+      document.getElementById('lbl-assessment').innerText = isMr ? "AI मॉडेलचे मत" : "Model Assessment";
+      document.getElementById('lbl-indicators').innerText = isMr ? "आढळलेले महत्त्वाचे घटक" : "Key Indicators Detected";
+      document.getElementById('lbl-breakdown').innerText = isMr ? "स्तरनिहाय स्कोअर विश्लेषण" : "Layered Score Breakdown";
+      document.getElementById('lbl-ling').innerText = isMr ? "भाषिक अखंडता" : "Linguistic Integrity";
+      document.getElementById('lbl-sens').innerText = isMr ? "संसर्गजन्य/भडकाऊ निर्देशांक" : "Sensationalism Index";
+      document.getElementById('lbl-source').innerText = isMr ? "स्रोत पडताळणी" : "Source Verification";
+      document.getElementById('btn-analyze').innerText = isMr ? "दुसऱ्या मजकुराची तपासणी करा" : "Analyze Another Item";
+      document.getElementById('btn-print').innerText = isMr ? "अहवाल प्रिंट करा" : "Export Printable Report";
+
+      // Progress Bars
+      const lingBarFill = document.getElementById('bar-score-fill');
+      document.getElementById('bar-score-text').innerText = `${score}%`;
+      document.getElementById('bar-score-text').style.color = themeColor;
+      lingBarFill.style.width = `${score}%`;
+      lingBarFill.style.backgroundColor = themeColor;
+
+      const sensScore = Math.max(10, 100 - score);
+      document.getElementById('sens-score-text').innerText = `${sensScore}%`;
+      document.getElementById('sens-score-fill').style.width = `${sensScore}%`;
+      document.getElementById('sens-score-fill').style.backgroundColor = score < 40 ? '#ef4444' : '#7c3aed';
+
+      const sourceScore = score < 40 ? Math.max(15, score - 5) : score;
+      document.getElementById('source-score-text').innerText = `${sourceScore}%`;
+      document.getElementById('source-score-text').style.color = themeColor;
+      document.getElementById('source-score-fill').style.width = `${sourceScore}%`;
+      document.getElementById('source-score-fill').style.backgroundColor = themeColor;
+
+      // Render Keywords
+      const kwContainer = document.getElementById('res-keywords');
+      const kwList = isMr ? (globalData.keywords_mr || globalData.keywords) : (globalData.keywords_en || globalData.keywords);
+      
+      kwContainer.innerHTML = '';
+      if (Array.isArray(kwList)) {
+        kwList.forEach(item => {
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.innerText = item;
+          kwContainer.appendChild(span);
+        });
+      }
+    }
   </script>
 </body>
 </html>
