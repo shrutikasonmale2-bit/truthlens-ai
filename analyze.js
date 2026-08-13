@@ -1,5 +1,7 @@
 import { auth, db, collection, addDoc, serverTimestamp, onAuthStateChanged } from './firebase.js';
-import { GEMINI_API_KEY } from './config.js';
+
+// Line 4 Updated: नवीन Gemini API Key सेट केली आहे
+const GEMINI_API_KEY = "AIzaSyC6IyYaZNbDHTnljEeAkXERQ1So984zWI8";
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('analyze-form');
@@ -42,8 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return getFallbackResult(type, snippetText);
     }
 
-    // Updated to stable model endpoint
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
 
     const prompt = `
       You are an expert Forensic AI Fact-Checker. 
@@ -73,7 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { response_mime_type: "application/json" }
