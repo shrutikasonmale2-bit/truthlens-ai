@@ -1,5 +1,5 @@
 import { auth, db, collection, addDoc, serverTimestamp, onAuthStateChanged } from './firebase.js';
-import { GEMINI_API_KEY } from './config.js';
+import { GEMINI_API_KEY } from './config.js.txt';
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('analyze-form');
