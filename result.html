@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analysis Result - TruthLens AI</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
   <style>
     /* Forensic Analysis Report Page Layout Styles */
     .report-container {
@@ -29,7 +29,7 @@
     }
 
     .subtitle {
-      color: var(--text-sub);
+      color: var(--text-sub, #9ca3af);
       font-size: 0.95rem;
       margin-top: 4px;
     }
@@ -59,7 +59,7 @@
 
     .report-card {
       background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
       border-radius: 18px;
       padding: 2rem;
       backdrop-filter: blur(16px);
@@ -74,7 +74,7 @@
     }
 
     .card-title {
-      color: var(--text-sub);
+      color: var(--text-sub, #9ca3af);
       font-size: 0.95rem;
       margin-bottom: 0.8rem;
     }
@@ -82,16 +82,16 @@
     .score-value {
       font-size: 3.2rem;
       font-weight: 700;
-      color: #22c55e;
       margin-bottom: 0.4rem;
+      transition: color 0.3s ease;
     }
 
     .status-value {
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 700;
-      color: #22c55e;
       line-height: 1.25;
       margin-bottom: 0.4rem;
+      transition: color 0.3s ease;
     }
 
     .card-subtext {
@@ -106,7 +106,7 @@
     }
 
     .desc-text {
-      color: var(--text-sub);
+      color: var(--text-sub, #9ca3af);
       font-size: 0.95rem;
       line-height: 1.5;
       margin-bottom: 1.5rem;
@@ -127,7 +127,7 @@
 
     .tag {
       background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       color: #d1d5db;
       padding: 6px 14px;
       border-radius: 8px;
@@ -160,23 +160,27 @@
     .progress-bar-fill {
       height: 100%;
       border-radius: 10px;
-      transition: width 0.8s ease-in-out;
-    }
-
-    .green-fill {
-      background: #22c55e;
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
-    }
-
-    .purple-fill {
-      background: #7c3aed;
-      box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+      transition: width 0.8s ease-in-out, background-color 0.4s ease;
     }
 
     .action-buttons {
       margin-top: 2rem;
       display: flex;
       gap: 1rem;
+    }
+
+    .btn-primary {
+      background: #7c3aed;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-block;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover {
+      background: #6d28d9;
     }
   </style>
 </head>
@@ -229,30 +233,30 @@
           <div class="progress-item">
             <div class="progress-labels">
               <span>Linguistic Integrity</span>
-              <span style="color: #22c55e;" id="bar-score-text">--%</span>
+              <span id="bar-score-text">--%</span>
             </div>
             <div class="progress-bar-bg">
-              <div class="progress-bar-fill green-fill" id="bar-score-fill" style="width: 0%;"></div>
+              <div class="progress-bar-fill" id="bar-score-fill" style="width: 0%;"></div>
             </div>
           </div>
 
           <div class="progress-item">
             <div class="progress-labels">
               <span>Sensationalism Index</span>
-              <span>0%</span>
+              <span id="sens-score-text">0%</span>
             </div>
             <div class="progress-bar-bg">
-              <div class="progress-bar-fill purple-fill" style="width: 0%;"></div>
+              <div class="progress-bar-fill" id="sens-score-fill" style="width: 0%;"></div>
             </div>
           </div>
 
           <div class="progress-item">
             <div class="progress-labels">
               <span>Source Verification</span>
-              <span style="color: #a78bfa;">50%</span>
+              <span id="source-score-text">0%</span>
             </div>
             <div class="progress-bar-bg">
-              <div class="progress-bar-fill purple-fill" style="width: 50%;"></div>
+              <div class="progress-bar-fill" id="source-score-fill" style="width: 0%;"></div>
             </div>
           </div>
 
@@ -264,7 +268,7 @@
     <!-- Navigation Buttons -->
     <div class="action-buttons">
       <a href="analyze.html" class="btn-primary">Analyze Another Item</a>
-      <a href="report.html" class="btn-primary" style="background: rgba(255,255,255,0.1);">Export Printable Report</a>
+      <a href="#" onclick="window.print(); return false;" class="btn-primary" style="background: rgba(255,255,255,0.1);">Export Printable Report</a>
     </div>
 
   </div>
@@ -284,25 +288,69 @@
         const data = JSON.parse(raw);
         console.log("Parsed Data Object:", data);
 
-        // १. Trust Score
-        const score = data.trust_score ?? data.score ?? data.trustScore ?? 85;
+        // १. Trust Score value
+        const score = Math.round(data.trust_score ?? data.score ?? data.trustScore ?? 85);
         document.getElementById('res-score').innerText = `${score}%`;
-        document.getElementById('bar-score-text').innerText = `${score}%`;
-        document.getElementById('bar-score-fill').style.width = `${score}%`;
 
-        // २. Risk Rating
+        // २. Risk Rating text
         const risk = data.risk_level ?? data.risk ?? data.risk_rating ?? 'Authentic Text Structure';
         document.getElementById('res-risk').innerText = risk;
 
-        // ३. Explanation
-        const exp = data.explanation ?? data.assessment ?? data.message ?? 'Evaluated text structure. Detected 0 sensational or clickbait flags.';
+        // ३. Dynamic Color & Theme Logic (Red for Risk < 40, Orange for 40-74, Green for >= 75)
+        let themeColor = '#22c55e'; // Green default
+        let shadowColor = 'rgba(34, 197, 94, 0.4)';
+
+        if (score < 40) {
+          themeColor = '#ef4444'; // Red for High Risk
+          shadowColor = 'rgba(239, 68, 68, 0.4)';
+        } else if (score >= 40 && score < 75) {
+          themeColor = '#f59e0b'; // Orange for Moderate Risk
+          shadowColor = 'rgba(245, 158, 11, 0.4)';
+        }
+
+        // Apply colors dynamically to Score & Risk elements
+        const scoreEl = document.getElementById('res-score');
+        const riskEl = document.getElementById('res-risk');
+        scoreEl.style.color = themeColor;
+        riskEl.style.color = themeColor;
+
+        // ४. Breakdown Bars Update
+        // Linguistic Bar matches overall score theme
+        const lingBarFill = document.getElementById('bar-score-fill');
+        const lingBarText = document.getElementById('bar-score-text');
+        lingBarText.innerText = `${score}%`;
+        lingBarText.style.color = themeColor;
+        lingBarFill.style.width = `${score}%`;
+        lingBarFill.style.backgroundColor = themeColor;
+        lingBarFill.style.boxShadow = `0 0 10px ${shadowColor}`;
+
+        // Sensationalism Index (Inverse of score roughly)
+        const sensScore = Math.max(10, 100 - score);
+        const sensBarFill = document.getElementById('sens-score-fill');
+        const sensBarText = document.getElementById('sens-score-text');
+        sensBarText.innerText = `${sensScore}%`;
+        sensBarFill.style.width = `${sensScore}%`;
+        let sensColor = score < 40 ? '#ef4444' : '#7c3aed'; // Red if high risk, purple otherwise
+        sensBarFill.style.backgroundColor = sensColor;
+
+        // Source Verification Bar
+        const sourceScore = score < 40 ? Math.max(15, score - 5) : score;
+        const sourceBarFill = document.getElementById('source-score-fill');
+        const sourceBarText = document.getElementById('source-score-text');
+        sourceBarText.innerText = `${sourceScore}%`;
+        sourceBarText.style.color = themeColor;
+        sourceBarFill.style.width = `${sourceScore}%`;
+        sourceBarFill.style.backgroundColor = themeColor;
+
+        // ५. Explanation text
+        const exp = data.explanation ?? data.assessment ?? data.message ?? 'Evaluated text structure successfully.';
         document.getElementById('res-explanation').innerText = exp;
 
-        // ४. Keywords / Indicators - Tag badges स्वरूपात दाखवणे
+        // ६. Keywords / Indicators - Tag badges
         const kwContainer = document.getElementById('res-keywords');
         const kw = data.keywords ?? data.indicators ?? ["Linguistic Scoring", "Sensationalism Check", "NLP Classification"];
         
-        kwContainer.innerHTML = ''; // Clear container
+        kwContainer.innerHTML = ''; 
         if (Array.isArray(kw) && kw.length > 0) {
           kw.forEach(item => {
             const span = document.createElement('span');
