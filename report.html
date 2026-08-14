@@ -74,7 +74,6 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Read latest saved report from LocalStorage
       const rawData = localStorage.getItem('latestReport');
       
       if (!rawData) {
@@ -85,31 +84,41 @@
       try {
         const data = JSON.parse(rawData);
 
-        // Is Fake check & Dynamic Trust Score calculation
-        const isFake = data.result?.label === 'FAKE' || data.result?.isFake === true || data.isFake === true;
-        const rawScore = data.trustScore ?? data.score ?? data.result?.confidence ?? 0;
-        const score = typeof rawScore === 'number' ? rawScore.toFixed(1) : rawScore;
+        // 1. Trust Score Naming Handling (snake_case and camelCase support)
+        const rawScore = data.trust_score ?? data.trustScore ?? data.score ?? data.result?.confidence ?? 0;
+        const numericScore = typeof rawScore === 'number' ? rawScore : parseFloat(rawScore || 0);
+        const scoreFormatted = numericScore.toFixed(1);
+
+        // 2. Risk Evaluation Logic Fix
+        const isHighRisk = data.risk_level === 'HIGH RISK' || 
+                           data.risk_level === 'High Manipulation Risk' || 
+                           data.result?.label === 'FAKE' || 
+                           data.result?.isFake === true || 
+                           data.isFake === true || 
+                           numericScore < 50.0;
 
         // Render Score & Color
         const scoreElement = document.getElementById('trust-score-text');
-        scoreElement.innerText = `${score}%`;
-        scoreElement.style.color = isFake ? '#ef4444' : '#22c55e';
+        scoreElement.innerText = `${scoreFormatted}%`;
+        scoreElement.style.color = isHighRisk ? '#ef4444' : '#22c55e';
 
         // Render Risk Badge
         const badgeContainer = document.getElementById('risk-badge-container');
-        badgeContainer.innerHTML = isFake 
+        badgeContainer.innerHTML = isHighRisk 
           ? `<span class="badge-risk" style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 6px 14px; border-radius: 6px; border: 1px solid #ef4444;">HIGH RISK</span>`
           : `<span class="badge-risk" style="color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.15); padding: 6px 14px; border-radius: 6px; border: 1px solid #22c55e;">LOW RISK</span>`;
 
         // Snippet & Type
-        document.getElementById('content-type-text').innerText = data.contentType || 'Text';
-        document.getElementById('snippet-text').innerText = `"${data.contentSnippet || data.text || 'No snippet provided'}"`;
+        document.getElementById('content-type-text').innerText = data.category || data.contentType || data.type || 'Text';
+        
+        const snippet = data.extracted_text || data.scraped_snippet || data.contentSnippet || data.text || 'No snippet provided';
+        document.getElementById('snippet-text').innerText = `"${snippet}"`;
 
         // Findings
-        if (data.opinion || data.result?.explanation) {
-          document.getElementById('report-text').innerText = data.opinion || data.result?.explanation;
+        if (data.explanation || data.opinion || data.result?.explanation) {
+          document.getElementById('report-text').innerText = data.explanation || data.opinion || data.result?.explanation;
         } else {
-          document.getElementById('report-text').innerText = isFake 
+          document.getElementById('report-text').innerText = isHighRisk 
             ? "Warning: The analyzed content exhibits patterns typically associated with misinformation or synthetic media. Further verification from authentic sources is recommended."
             : "The analyzed content passed evaluation with high confidence. No significant indicators of automated manipulation or fake content were detected.";
         }
