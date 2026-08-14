@@ -39,55 +39,25 @@
         </div>
       </div>
 
-      <!-- Quick Scan Action -->
-      <div class="glass-card" style="margin-bottom: 2rem;">
-        <h3>Quick Scan</h3>
-        <p style="color: var(--text-sub); margin-bottom: 1rem;">Directly jump to content evaluation tool.</p>
-        <a href="analyze.html" class="btn-primary">Start New Analysis</a>
-      </div>
+      <!-- Actions & History Redirect -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+        <div class="glass-card">
+          <h3>Quick Scan</h3>
+          <p style="color: var(--text-sub); margin-bottom: 1.5rem;">Directly jump to content evaluation tool.</p>
+          <a href="analyze.html" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none;">Start New Analysis</a>
+        </div>
 
-      <!-- Scan History Table -->
-      <div class="glass-card">
-        <h3>Scan History</h3>
-        <p style="color: var(--text-sub); margin-bottom: 1.5rem;">Log of previous AI validations stored on Firestore.</p>
-
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-sub);">
-                <th style="padding: 12px;">Type</th>
-                <th style="padding: 12px;">Content Snippet</th>
-                <th style="padding: 12px;">Trust Score</th>
-                <th style="padding: 12px;">Risk Level</th>
-                <th style="padding: 12px;">Action</th>
-              </tr>
-            </thead>
-            <tbody id="history-table-body">
-              <tr>
-                <td colspan="5" style="padding: 20px; text-align: center; color: var(--text-sub);">Loading history...</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="glass-card">
+          <h3>Detailed History</h3>
+          <p style="color: var(--text-sub); margin-bottom: 1.5rem;">View and manage your full verification log.</p>
+          <a href="history.html" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none; background: rgba(255,255,255,0.1);">Go to History Tab</a>
         </div>
       </div>
     </main>
   </div>
 
   <script type="module">
-    import { auth, db, collection, getDocs, doc, deleteDoc, query, where, onAuthStateChanged } from './firebase.js';
-
-    // Delete record function
-    window.deleteRecord = async (docId) => {
-      if (confirm("Are you sure you want to delete this scan record?")) {
-        try {
-          await deleteDoc(doc(db, 'analyses', docId));
-          location.reload();
-        } catch (err) {
-          console.error("Error deleting document: ", err);
-          alert("Failed to delete record.");
-        }
-      }
-    };
+    import { auth, db, collection, getDocs, query, where, onAuthStateChanged } from './firebase.js';
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -103,64 +73,16 @@
         let safeCount = 0;
         let riskyCount = 0;
 
-        const tableBody = document.getElementById('history-table-body');
-        tableBody.innerHTML = '';
-
-        if (querySnapshot.empty) {
-          tableBody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-sub);">No scan history found.</td></tr>`;
-        }
-
-        querySnapshot.forEach((documentSnap) => {
-          const data = documentSnap.data();
-          const docId = documentSnap.id;
-
-          // 1. Trust Score Normalization
-          const rawScore = data.result?.trust_score ?? data.trust_score ?? data.score ?? 0;
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const rawScore = data.trust_score ?? data.trustScore ?? data.score ?? 0;
           const numericScore = typeof rawScore === 'number' ? rawScore : parseFloat(rawScore || 0);
-          const scoreFormatted = numericScore.toFixed(1);
-
-          // 2. Risk Condition Fix (Score < 50 is High Risk)
-          const isHighRisk = data.risk_level === 'HIGH RISK' || 
-                             data.risk_level === 'High Manipulation Risk' || 
-                             numericScore < 50.0;
 
           if (numericScore >= 50.0) {
             safeCount++;
           } else {
             riskyCount++;
           }
-
-          // 3. Clean Content Snippet Quotes
-          let snippet = data.extracted_text || data.contentSnippet || data.text || data.url || 'No content';
-          snippet = snippet.replace(/^"+|"+$/g, '').trim();
-
-          const shortSnippet = snippet.length > 45 ? snippet.substring(0, 45) + '...' : snippet;
-
-          // Render Row
-          const tr = document.createElement('tr');
-          tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-          tr.innerHTML = `
-            <td style="padding: 12px; font-weight: 500;">${data.category || data.type || 'Text'}</td>
-            <td style="padding: 12px; color: var(--text-sub);" title="${snippet}">"${shortSnippet}"</td>
-            <td style="padding: 12px; color: ${isHighRisk ? '#ef4444' : '#22c55e'}; font-weight: bold;">
-              ${scoreFormatted}%
-            </td>
-            <td style="padding: 12px;">
-              <span style="color: ${isHighRisk ? '#ef4444' : '#22c55e'}; 
-                           border: 1px solid ${isHighRisk ? '#ef4444' : '#22c55e'}; 
-                           background: ${isHighRisk ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)'};
-                           padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 0.8rem;">
-                ${isHighRisk ? 'HIGH RISK' : 'LOW RISK'}
-              </span>
-            </td>
-            <td style="padding: 12px;">
-              <button onclick="window.deleteRecord('${docId}')" 
-                      style="color: #ef4444; background: rgba(239,68,68,0.1); border: 1px solid #ef4444; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
-                Delete
-              </button>
-            </td>
-          `;
-          tableBody.appendChild(tr);
         });
 
         document.getElementById('stat-total').textContent = totalCount;
