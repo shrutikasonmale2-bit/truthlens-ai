@@ -31,11 +31,12 @@
               <th style="padding: 1rem;">Content Snippet</th>
               <th style="padding: 1rem;">Trust Score</th>
               <th style="padding: 1rem;">Risk Level</th>
+              <th style="padding: 1rem;">Action</th>
             </tr>
           </thead>
           <tbody id="history-table-body">
             <tr>
-              <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">
+              <td colspan="5" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">
                 Loading history...
               </td>
             </tr>
@@ -46,8 +47,8 @@
   </div>
 
   <script type="module">
-    // 🎯 Fix: Path मधून './js/' पूर्णपणे काढले आहे कारण firebase.js डायरेक्ट Root मध्ये आहे.
-    import { auth, db, collection, getDocs, query, where, onAuthStateChanged } from './firebase.js';
+    // Firebase Imports - doc ani deleteDoc functions add kele ahet
+    import { auth, db, collection, getDocs, query, where, onAuthStateChanged, doc, deleteDoc } from './firebase.js';
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -69,19 +70,21 @@
         tbody.innerHTML = '';
         
         if (querySnapshot.empty) {
-          tbody.innerHTML = '<tr><td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">No scan records found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">No scan records found.</td></tr>';
           return;
         }
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const docId = docSnap.id;
           const tr = document.createElement('tr');
           tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
           
-          // High Risk Check
-          const isFake = data.result?.label === 'FAKE' || data.result?.isFake === true;
-          const confidence = data.result?.confidence || 88.5;
-          const score = isFake ? (100 - confidence).toFixed(1) : confidence;
+          const isFake = data.result?.label === 'FAKE' || data.result?.isFake === true || data.isFake === true;
+          
+          // Fix: Dynamic Trust Score Calculation
+          const rawScore = data.trustScore ?? data.score ?? data.result?.confidence ?? 0;
+          const score = typeof rawScore === 'number' ? rawScore.toFixed(1) : rawScore;
 
           const riskBadge = isFake 
             ? `<span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #ef4444;">HIGH RISK</span>`
@@ -95,12 +98,35 @@
             <td style="padding: 1rem; color: var(--text-sub); max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">"${snippet}"</td>
             <td style="padding: 1rem; font-weight: 600; color: ${isFake ? '#ef4444' : '#22c55e'};">${score}%</td>
             <td style="padding: 1rem;">${riskBadge}</td>
+            <td style="padding: 1rem;">
+              <button class="delete-btn" data-id="${docId}" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Delete</button>
+            </td>
           `;
           tbody.appendChild(tr);
         });
+
+        // Delete Logic: Fires upon clicking the Delete button
+        tbody.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this scan record?')) {
+              try {
+                await deleteDoc(doc(db, 'analyses', id));
+                e.target.closest('tr').remove();
+                if (tbody.children.length === 0) {
+                  tbody.innerHTML = '<tr><td colspan="5" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">No scan records found.</td></tr>';
+                }
+              } catch (err) {
+                console.error("Delete error:", err);
+                alert("Failed to delete record.");
+              }
+            }
+          });
+        });
+
       } catch (error) {
         console.error("Error fetching history:", error);
-        tbody.innerHTML = '<tr><td colspan="4" style="padding: 1.5rem; text-align: center; color: #ef4444;">Failed to load history from Firestore. Check console for details.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="padding: 1.5rem; text-align: center; color: #ef4444;">Failed to load history from Firestore. Check console for details.</td></tr>';
       }
     });
   </script>
