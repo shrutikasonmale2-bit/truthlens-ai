@@ -47,7 +47,7 @@
   </div>
 
   <script type="module">
-    // Firebase Imports - doc ani deleteDoc functions add kele ahet
+    // Firestore imports directly through ./firebase.js
     import { auth, db, collection, getDocs, query, where, onAuthStateChanged, doc, deleteDoc } from './firebase.js';
 
     onAuthStateChanged(auth, async (user) => {
@@ -82,7 +82,7 @@
           
           const isFake = data.result?.label === 'FAKE' || data.result?.isFake === true || data.isFake === true;
           
-          // Fix: Dynamic Trust Score Calculation
+          // Dynamic Trust Score Calculation
           const rawScore = data.trustScore ?? data.score ?? data.result?.confidence ?? 0;
           const score = typeof rawScore === 'number' ? rawScore.toFixed(1) : rawScore;
 
@@ -105,7 +105,7 @@
           tbody.appendChild(tr);
         });
 
-        // Delete Logic: Fires upon clicking the Delete button
+        // Delete Button Click Listener
         tbody.querySelectorAll('.delete-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             const id = e.target.getAttribute('data-id');
