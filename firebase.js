@@ -1,16 +1,25 @@
-// Firebase Initialization Script
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signOut, 
+  onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { 
   getFirestore, 
   collection, 
   addDoc, 
   getDocs, 
+  getDoc,
+  setDoc,
   query, 
   where, 
+  orderBy,
+  limit,
   serverTimestamp, 
-  doc,        // 👈 Add kela
-  deleteDoc   // 👈 Add kela
+  doc, 
+  deleteDoc 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -28,7 +37,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Shevati doc ani deleteDoc pan export kele ahet
 export { 
   auth, 
   db, 
@@ -39,8 +47,12 @@ export {
   collection, 
   addDoc, 
   getDocs, 
+  getDoc,
+  setDoc,
   query, 
   where, 
+  orderBy,
+  limit,
   serverTimestamp, 
   doc, 
   deleteDoc 
