@@ -5,14 +5,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Profile - TruthLens AI</title>
   <link rel="stylesheet" href="style.css?v=1">
-  <link rel="stylesheet" href="dashboard.css?v=1"> 
+  <link rel="stylesheet" href="dashboard.css?v=1">
+  <style>
+    .toast-message {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: #ffffff;
+      font-weight: 500;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      z-index: 9999;
+      transition: all 0.3s ease;
+    }
+    .avatar-wrapper {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
+    }
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #7c3aed;
+    }
+    .avatar-initials {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .form-group label {
+      font-size: 0.9rem;
+      color: #d1d5db;
+    }
+    .form-control {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: #7c3aed;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Toast Notification System -->
   <div id="toast" class="toast-message" style="display:none;"></div>
 
   <div class="dashboard-layout">
+    
+    <!-- Navigation Sidebar -->
     <aside class="sidebar">
-      <a href="dashboard.html" class="brand-logo" style="margin-bottom: 1.5rem;">
+      <a href="dashboard.html" class="brand-logo" style="margin-bottom: 1.5rem; text-decoration: none;">
         <div class="logo-icon-box">
           <div class="logo-icon-core"><div class="ai-lens"></div></div>
         </div>
@@ -27,60 +92,64 @@
       <a href="report.html">Reports</a>
       <a href="profile.html" class="active">Profile</a>
       <a href="settings.html">Settings</a>
-      <a href="#" id="logout-btn" style="color: var(--danger); margin-top: auto;">Logout</a>
+      <a href="#" id="logout-btn" style="color: #ef4444; margin-top: auto;">Logout</a>
     </aside>
 
+    <!-- Main Profile Content -->
     <main class="main-content">
       <h2>User Profile</h2>
-      <p style="color: var(--text-sub); margin-bottom: 1.5rem;">Manage your account details and credentials.</p>
+      <p style="color: var(--text-sub, #9ca3af); margin-bottom: 1.5rem;">Manage your account details and security settings.</p>
 
-      <div class="glass-card" style="max-width: 650px;">
-        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
-          <div style="position: relative;">
-            <img id="user-avatar-img" src="" alt="Profile" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; display: none; border: 2px solid #7c3aed;">
-            <div id="user-avatar-initials" style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: #fff;">
-              --
-            </div>
+      <div class="glass-card" style="max-width: 650px; padding: 2rem; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px;">
+        
+        <!-- Header User Section -->
+        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+          <div class="avatar-wrapper">
+            <img id="user-avatar-img" class="avatar-img" src="" alt="Profile" style="display: none;">
+            <div id="user-avatar-initials" class="avatar-initials">--</div>
           </div>
           <div>
-            <h3 id="display-user-name">Loading...</h3>
-            <p id="display-user-email" style="color: var(--text-sub); font-size: 0.95rem;">loading@example.com</p>
-            <span style="display: inline-block; margin-top: 5px; background: rgba(34, 197, 94, 0.15); color: #22c55e; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Verified Account</span>
+            <h3 id="display-user-name" style="color: #ffffff; font-size: 1.4rem; margin-bottom: 0.2rem;">Loading...</h3>
+            <p id="display-user-email" style="color: #9ca3af; font-size: 0.95rem;">loading@example.com</p>
+            <span style="display: inline-block; margin-top: 6px; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Verified Account</span>
           </div>
         </div>
 
+        <!-- 1. Profile Update Form -->
         <form id="update-profile-form">
-          <h4 style="margin-bottom: 1rem; color: #fff;">Edit Profile Details</h4>
+          <h4 style="margin-bottom: 1rem; color: #ffffff; font-size: 1.1rem;">Edit Profile Details</h4>
           
           <div class="form-group">
-            <label>Full Name / Username</label>
-            <input type="text" id="edit-name" class="form-control" placeholder="Enter your full name" required>
+            <label for="edit-name">Full Name / Username</label>
+            <input type="text" id="edit-name" class="form-control" placeholder="Enter full name" required>
           </div>
 
           <div class="form-group">
-            <label>Profile Photo URL</label>
-            <input type="url" id="edit-photo-url" class="form-control" placeholder="Paste image link (e.g. https://...)">
-            <small style="color: var(--text-sub); font-size: 0.8rem;">Paste an image web URL to update your profile picture.</small>
+            <label for="edit-photo-url">Profile Photo URL</label>
+            <input type="url" id="edit-photo-url" class="form-control" placeholder="https://example.com/photo.jpg">
+            <small style="color: #9ca3af; font-size: 0.8rem;">Provide a public image link for your profile avatar.</small>
           </div>
 
           <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" id="edit-email" class="form-control" readonly style="opacity: 0.7; cursor: not-allowed;">
+            <label for="edit-email">Email Address</label>
+            <input type="email" id="edit-email" class="form-control" readonly style="opacity: 0.6; cursor: not-allowed; background: rgba(0,0,0,0.2);">
           </div>
 
-          <button type="submit" class="btn-primary" style="margin-top: 0.5rem;">Update Profile</button>
+          <button type="submit" class="btn-primary" style="margin-top: 0.5rem; background: #7c3aed; color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Update Profile</button>
         </form>
 
-        <hr style="border-color: var(--border-color); margin: 2rem 0;">
+        <hr style="border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 2rem 0;">
 
+        <!-- 2. Security / Password Update Form -->
         <form id="change-password-form">
-          <h4 style="margin-bottom: 1rem; color: #fff;">Security & Password</h4>
+          <h4 style="margin-bottom: 1rem; color: #ffffff; font-size: 1.1rem;">Security & Password</h4>
           <div class="form-group">
-            <label>New Password</label>
+            <label for="new-password">New Password</label>
             <input type="password" id="new-password" class="form-control" placeholder="••••••••" required minlength="6">
           </div>
-          <button type="submit" class="btn-secondary">Update Password</button>
+          <button type="submit" style="background: rgba(255, 255, 255, 0.1); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Update Password</button>
         </form>
+
       </div>
     </main>
   </div>
