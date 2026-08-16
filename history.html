@@ -47,8 +47,14 @@
   </div>
 
   <script type="module">
-    // Firestore imports directly through ./firebase.js
     import { auth, db, collection, getDocs, query, where, onAuthStateChanged, doc, deleteDoc } from './firebase.js';
+
+    // Helper to sanitize HTML content to prevent XSS attacks
+    function escapeHTML(str) {
+      return String(str || '').replace(/[&<>"']/g, (m) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      })[m]);
+    }
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -80,18 +86,17 @@
           const tr = document.createElement('tr');
           tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
           
-          const isFake = data.result?.label === 'FAKE' || data.result?.isFake === true || data.isFake === true;
-          
-          // Dynamic Trust Score Calculation
-          const rawScore = data.trustScore ?? data.score ?? data.result?.confidence ?? 0;
+          const rawScore = data.trustScore ?? data.score ?? data.result?.trust_score ?? data.result?.confidence ?? 0;
           const score = typeof rawScore === 'number' ? rawScore.toFixed(1) : rawScore;
+
+          const isFake = rawScore <= 30 || data.result?.label === 'FAKE' || data.result?.isFake === true || data.isFake === true;
 
           const riskBadge = isFake 
             ? `<span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #ef4444;">HIGH RISK</span>`
             : `<span style="color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #22c55e;">LOW RISK</span>`;
 
-          const type = data.contentType || 'Text';
-          const snippet = data.contentSnippet || 'No snippet';
+          const type = escapeHTML(data.contentType || 'Text');
+          const snippet = escapeHTML(data.contentSnippet || 'No snippet');
 
           tr.innerHTML = `
             <td style="padding: 1rem; text-transform: capitalize;">${type}</td>
@@ -105,28 +110,31 @@
           tbody.appendChild(tr);
         });
 
-        // Delete Button Click Listener
-        tbody.querySelectorAll('.delete-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            const id = e.target.getAttribute('data-id');
-            if (confirm('Are you sure you want to delete this scan record?')) {
-              try {
-                await deleteDoc(doc(db, 'analyses', id));
-                e.target.closest('tr').remove();
-                if (tbody.children.length === 0) {
-                  tbody.innerHTML = '<tr><td colspan="5" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">No scan records found.</td></tr>';
-                }
-              } catch (err) {
-                console.error("Delete error:", err);
-                alert("Failed to delete record.");
-              }
-            }
-          });
-        });
-
       } catch (error) {
         console.error("Error fetching history:", error);
         tbody.innerHTML = '<tr><td colspan="5" style="padding: 1.5rem; text-align: center; color: #ef4444;">Failed to load history from Firestore. Check console for details.</td></tr>';
+      }
+    });
+
+    // Event Delegation for Delete Buttons
+    document.getElementById('history-table-body')?.addEventListener('click', async (e) => {
+      if (!e.target.classList.contains('delete-btn')) return;
+
+      const id = e.target.getAttribute('data-id');
+      if (confirm('Are you sure you want to delete this scan record?')) {
+        try {
+          await deleteDoc(doc(db, 'analyses', id));
+          const tr = e.target.closest('tr');
+          tr.remove();
+
+          const tbody = document.getElementById('history-table-body');
+          if (tbody && tbody.children.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">No scan records found.</td></tr>';
+          }
+        } catch (err) {
+          console.error("Delete error:", err);
+          alert("Failed to delete record.");
+        }
       }
     });
   </script>
