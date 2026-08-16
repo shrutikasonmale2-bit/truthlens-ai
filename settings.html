@@ -3,46 +3,340 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Settings - TruthLens AI</title>
+  <title>Settings & Preferences - TruthLens AI</title>
   <link rel="stylesheet" href="style.css?v=1">
   <link rel="stylesheet" href="dashboard.css?v=1">
+  <style>
+    /* Settings Custom Styling */
+    .settings-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      max-width: 800px;
+    }
+    
+    .setting-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.8rem;
+      backdrop-filter: blur(16px);
+    }
+
+    .setting-card-header {
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .setting-card-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .setting-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .setting-info {
+      max-width: 70%;
+    }
+    .setting-label {
+      color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .setting-desc {
+      color: #9ca3af;
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    .form-select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      outline: none;
+      cursor: pointer;
+      min-width: 180px;
+    }
+    .form-select option {
+      background: #1e1e2d;
+      color: #ffffff;
+    }
+
+    /* UI Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      transition: .3s ease-in-out;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s ease-in-out;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #7c3aed;
+      border-color: #7c3aed;
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    /* Toast Notification */
+    .toast-message {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: #ffffff;
+      font-weight: 500;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      z-index: 9999;
+      display: none;
+    }
+
+    .danger-btn {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+    }
+    .danger-btn:hover {
+      background: #ef4444;
+      color: #ffffff;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Toast Notification System -->
+  <div id="toast" class="toast-message"></div>
+
   <div class="dashboard-layout">
+    
+    <!-- Navigation Sidebar -->
     <aside class="sidebar">
-      <div class="logo">TruthLens AI</div>
+      <a href="dashboard.html" class="brand-logo" style="margin-bottom: 1.5rem; text-decoration: none;">
+        <div class="logo-icon-box">
+          <div class="logo-icon-core"><div class="ai-lens"></div></div>
+        </div>
+        <div class="logo-text-group">
+          <span class="logo-title">Truth<span>Lens</span></span>
+          <span class="logo-tagline">AI Trust Analyzer</span>
+        </div>
+      </a>
       <a href="dashboard.html">Dashboard</a>
       <a href="analyze.html">Analyze Content</a>
       <a href="history.html">History</a>
       <a href="report.html">Reports</a>
       <a href="profile.html">Profile</a>
       <a href="settings.html" class="active">Settings</a>
+      <a href="#" id="logout-btn" style="color: #ef4444; margin-top: auto;">Logout</a>
     </aside>
 
+    <!-- Main Content Area -->
     <main class="main-content">
-      <h2>Settings</h2>
-      <div class="glass-card" style="max-width: 600px; margin-top: 1.5rem;">
-        <h3>Preferences</h3>
-        <p style="color: var(--text-sub); margin-bottom: 1.5rem;">Configure application behavior and defaults.</p>
+      <h2>System Preferences & Settings</h2>
+      <p style="color: var(--text-sub, #9ca3af); margin-bottom: 1.5rem;">Configure application defaults, AI engine parameters, and privacy controls.</p>
+
+      <form id="settings-form" class="settings-grid">
         
-        <div class="form-group">
-          <label>Default Analysis Theme</label>
-          <select class="form-control">
-            <option>Dark SaaS Mode (Active)</option>
-          </select>
+        <!-- Section 1: General & Display Preferences -->
+        <div class="setting-card">
+          <div class="setting-card-header">
+            <div class="setting-card-title">🌐 General Preferences</div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Default Report Language</span>
+              <span class="setting-desc">Choose the default display language for audit findings and reports.</span>
+            </div>
+            <select id="pref-language" class="form-select">
+              <option value="en">English (Default)</option>
+              <option value="mr">मराठी (Marathi)</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Interface Theme</span>
+              <span class="setting-desc">Select visual theme preference for dashboard interface.</span>
+            </div>
+            <select id="pref-theme" class="form-select">
+              <option value="dark-saas">Dark Glassmorphic (Active)</option>
+              <option value="system">System Preference</option>
+            </select>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label>ML Model Confidence Threshold</label>
-          <select class="form-control">
-            <option>Standard (Balanced Precision)</option>
-            <option>High Strictness</option>
-          </select>
+        <!-- Section 2: AI Forensic Engine Configuration -->
+        <div class="setting-card">
+          <div class="setting-card-header">
+            <div class="setting-card-title">⚡ AI Detection Engine</div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Confidence Sensitivity Threshold</span>
+              <span class="setting-desc">Adjust how strictly the ML model flags potential misinformation or manipulation.</span>
+            </div>
+            <select id="pref-threshold" class="form-select">
+              <option value="balanced">Balanced (Recommended)</option>
+              <option value="strict">Strict (High Precision)</option>
+              <option value="lenient">Lenient (Low False Positives)</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Deep Linguistic Analysis</span>
+              <span class="setting-desc">Enable secondary semantic and sentiment evaluation on scanned texts.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="pref-deep-analysis" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
 
-        <button class="btn-primary" onclick="alert('Settings saved successfully!')">Save Preferences</button>
-      </div>
+        <!-- Section 3: Data, Privacy & Storage -->
+        <div class="setting-card">
+          <div class="setting-card-header">
+            <div class="setting-card-title">🔒 Privacy & Storage</div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Save Local Scan History</span>
+              <span class="setting-desc">Store recent scan logs in browser storage for quick offline retrieval.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="pref-save-history" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Clear Cached Application Data</span>
+              <span class="setting-desc">Purge temporary scan cache and saved report sessions.</span>
+            </div>
+            <button type="button" class="danger-btn" onclick="clearLocalCache()">Clear Cache</button>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+          <button type="submit" class="btn-primary" style="background: #7c3aed; color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Settings</button>
+          <button type="button" onclick="loadSettings()" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 12px 24px; border-radius: 8px; font-weight: 500; cursor: pointer;">Reset Changes</button>
+        </div>
+
+      </form>
     </main>
   </div>
+
+  <script>
+    // Toast Notification Utility
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.style.background = isError ? '#ef4444' : '#22c55e';
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    // Load Saved Settings from LocalStorage
+    function loadSettings() {
+      const settings = JSON.parse(localStorage.getItem('appSettings')) || {
+        language: 'en',
+        theme: 'dark-saas',
+        threshold: 'balanced',
+        deepAnalysis: true,
+        saveHistory: true
+      };
+
+      document.getElementById('pref-language').value = settings.language;
+      document.getElementById('pref-theme').value = settings.theme;
+      document.getElementById('pref-threshold').value = settings.threshold;
+      document.getElementById('pref-deep-analysis').checked = settings.deepAnalysis;
+      document.getElementById('pref-save-history').checked = settings.saveHistory;
+    }
+
+    // Save Settings Event Listener
+    document.getElementById('settings-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const newSettings = {
+        language: document.getElementById('pref-language').value,
+        theme: document.getElementById('pref-theme').value,
+        threshold: document.getElementById('pref-threshold').value,
+        deepAnalysis: document.getElementById('pref-deep-analysis').checked,
+        saveHistory: document.getElementById('pref-save-history').checked
+      };
+
+      localStorage.setItem('appSettings', JSON.stringify(newSettings));
+      showToast('Settings saved successfully!');
+    });
+
+    // Clear Cache Action
+    function clearLocalCache() {
+      if (confirm("Are you sure you want to clear cached analysis data?")) {
+        localStorage.removeItem('latestReport');
+        sessionStorage.removeItem('latestResult');
+        showToast('Local scan cache cleared successfully!');
+      }
+    }
+
+    // Initialize on Page Load
+    document.addEventListener('DOMContentLoaded', loadSettings);
+  </script>
+
 </body>
 </html>
