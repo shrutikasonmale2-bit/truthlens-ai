@@ -7,21 +7,37 @@
   <link rel="stylesheet" href="style.css?v=1">
   <link rel="stylesheet" href="dashboard.css?v=1">
   <style>
+    /* Clean PDF Printing Styles */
     @media print {
-      body { background: #fff; color: #000; }
-      .no-print { display: none !important; }
-      .glass-card { border: 1px solid #ccc; box-shadow: none; background: #fff; color: #000; }
-      .badge-risk { border: 1px solid #000 !important; }
+      body { 
+        background: #ffffff !important; 
+        color: #000000 !important; 
+      }
+      .no-print { 
+        display: none !important; 
+      }
+      .glass-card { 
+        border: 1px solid #cccccc !important; 
+        box-shadow: none !important; 
+        background: #ffffff !important; 
+        color: #000000 !important; 
+      }
+      .badge-risk { 
+        border: 1px solid #000000 !important; 
+      }
     }
   </style>
 </head>
 <body>
   <div style="max-width: 800px; margin: 3rem auto; padding: 0 1rem;">
-    <div class="no-print" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between;">
-      <a href="dashboard.html" class="btn-primary" style="background: rgba(255,255,255,0.1); text-decoration: none; padding: 10px 18px; border-radius: 8px; color: #fff;">Back to Dashboard</a>
-      <button onclick="window.print()" class="btn-primary" style="padding: 10px 18px; border-radius: 8px; cursor: pointer;">Print PDF Report</button>
+    
+    <!-- Action Topbar -->
+    <div class="no-print" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <a href="dashboard.html" class="btn-primary" style="background: rgba(255,255,255,0.1); text-decoration: none; padding: 10px 18px; border-radius: 8px; color: #fff; font-weight: 500;">← Back to Dashboard</a>
+      <button onclick="window.print()" class="btn-primary" style="padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600;">Print PDF Report</button>
     </div>
 
+    <!-- Main Report Card -->
     <div class="glass-card" style="padding: 2.5rem; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
@@ -29,13 +45,13 @@
           <p style="color: var(--text-sub); font-size: 0.9rem;">Digital Content Trust Audit Certificate</p>
         </div>
         <div id="risk-badge-container">
-          <!-- Dynamic Risk Badge -->
+          <!-- Dynamic Risk Badge Rendered Here -->
         </div>
       </div>
       
       <hr style="border-color: rgba(255,255,255,0.1); margin: 1.5rem 0;">
 
-      <!-- Score & Type Grid -->
+      <!-- Score & Content Details Grid -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
         <div style="background: rgba(255,255,255,0.03); padding: 1.2rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
           <span style="color: var(--text-sub); font-size: 0.85rem;">Digital Trust Score</span>
@@ -47,24 +63,25 @@
         </div>
       </div>
 
-      <!-- Analyzed Snippet -->
+      <!-- Scanned Content Snippet -->
       <div style="margin-bottom: 2rem;">
         <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Analyzed Content Snippet</h3>
         <p id="snippet-text" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; font-style: italic; color: var(--text-sub); border-left: 3px solid #6366f1;">
-          "No content snippet loaded."
+          "Loading snippet..."
         </p>
       </div>
 
-      <!-- Summary & Findings -->
+      <!-- Audit Findings & Explanation -->
       <div style="margin-bottom: 2.5rem;">
         <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Summary Findings</h3>
         <p id="report-text" style="line-height: 1.6; color: var(--text-sub);">
-          This document serves as an automated prediction report generated via the TruthLens TF-IDF & Machine Learning model backend.
+          Loading audit findings...
         </p>
       </div>
 
       <hr style="border-color: rgba(255,255,255,0.1); margin-bottom: 1.5rem;">
 
+      <!-- Certificate Footer -->
       <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-sub);">
         <div>Evaluated by <strong>TruthLens Engine</strong> | Developer: Shrutika Sonmale</div>
         <div id="report-date">Date: --</div>
@@ -72,64 +89,92 @@
     </div>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const rawData = localStorage.getItem('latestReport');
-      
-      if (!rawData) {
-        document.getElementById('report-text').innerText = "No recent scan data found. Please analyze content on the Analyze page first.";
+  <script type="module">
+    import { db, doc, getDoc } from './firebase.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      let data = null;
+
+      // 1. Fetch from Firestore if URL parameter exists (e.g., report.html?id=ABC123XYZ)
+      const urlParams = new URLSearchParams(window.location.search);
+      const docId = urlParams.get('id');
+
+      if (docId) {
+        try {
+          const docRef = doc(db, 'analyses', docId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            data = docSnap.data();
+          }
+        } catch (err) {
+          console.error("Firestore document fetch error:", err);
+        }
+      }
+
+      // 2. Fallback to LocalStorage if URL parameter is absent or not found
+      if (!data) {
+        const rawData = localStorage.getItem('latestReport');
+        if (rawData) {
+          try {
+            data = JSON.parse(rawData);
+          } catch (e) {
+            console.error("LocalStorage parsing error:", e);
+          }
+        }
+      }
+
+      // 3. Render empty state if no valid data source exists
+      if (!data) {
+        document.getElementById('report-text').innerText = "No scan data found. Please analyze content or select a record from History.";
+        document.getElementById('snippet-text').innerText = '"No snippet available"';
         return;
       }
 
-      try {
-        const data = JSON.parse(rawData);
+      // 4. Calculate Trust Score across schema variations
+      const rawScore = data.trust_score ?? data.trustScore ?? data.score ?? data.result?.trust_score ?? data.result?.confidence ?? 0;
+      const numericScore = typeof rawScore === 'number' ? rawScore : parseFloat(rawScore || 0);
+      const scoreFormatted = numericScore.toFixed(1);
 
-        // 1. Trust Score Naming Handling (snake_case and camelCase support)
-        const rawScore = data.trust_score ?? data.trustScore ?? data.score ?? data.result?.confidence ?? 0;
-        const numericScore = typeof rawScore === 'number' ? rawScore : parseFloat(rawScore || 0);
-        const scoreFormatted = numericScore.toFixed(1);
+      // 5. Evaluate Risk Level
+      const isHighRisk = data.risk_level === 'HIGH RISK' || 
+                         data.risk_level === 'High Manipulation Risk' || 
+                         data.result?.label === 'FAKE' || 
+                         data.result?.isFake === true || 
+                         data.isFake === true || 
+                         numericScore < 50.0;
 
-        // 2. Risk Evaluation Logic Fix
-        const isHighRisk = data.risk_level === 'HIGH RISK' || 
-                           data.risk_level === 'High Manipulation Risk' || 
-                           data.result?.label === 'FAKE' || 
-                           data.result?.isFake === true || 
-                           data.isFake === true || 
-                           numericScore < 50.0;
+      // 6. Update Score & Risk Badge UI
+      const scoreElement = document.getElementById('trust-score-text');
+      scoreElement.innerText = `${scoreFormatted}%`;
+      scoreElement.style.color = isHighRisk ? '#ef4444' : '#22c55e';
 
-        // Render Score & Color
-        const scoreElement = document.getElementById('trust-score-text');
-        scoreElement.innerText = `${scoreFormatted}%`;
-        scoreElement.style.color = isHighRisk ? '#ef4444' : '#22c55e';
+      const badgeContainer = document.getElementById('risk-badge-container');
+      badgeContainer.innerHTML = isHighRisk 
+        ? `<span class="badge-risk" style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 6px 14px; border-radius: 6px; border: 1px solid #ef4444;">HIGH RISK</span>`
+        : `<span class="badge-risk" style="color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.15); padding: 6px 14px; border-radius: 6px; border: 1px solid #22c55e;">LOW RISK</span>`;
 
-        // Render Risk Badge
-        const badgeContainer = document.getElementById('risk-badge-container');
-        badgeContainer.innerHTML = isHighRisk 
-          ? `<span class="badge-risk" style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 6px 14px; border-radius: 6px; border: 1px solid #ef4444;">HIGH RISK</span>`
-          : `<span class="badge-risk" style="color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.15); padding: 6px 14px; border-radius: 6px; border: 1px solid #22c55e;">LOW RISK</span>`;
+      // 7. Update Snippet & Findings safely (.innerText prevents XSS)
+      document.getElementById('content-type-text').innerText = data.category || data.contentType || data.type || 'Text';
+      
+      const snippet = data.extracted_text || data.scraped_snippet || data.contentSnippet || data.text || 'No snippet provided';
+      document.getElementById('snippet-text').innerText = `"${snippet}"`;
 
-        // Snippet & Type
-        document.getElementById('content-type-text').innerText = data.category || data.contentType || data.type || 'Text';
-        
-        const snippet = data.extracted_text || data.scraped_snippet || data.contentSnippet || data.text || 'No snippet provided';
-        document.getElementById('snippet-text').innerText = `"${snippet}"`;
-
-        // Findings
-        if (data.explanation || data.opinion || data.result?.explanation) {
-          document.getElementById('report-text').innerText = data.explanation || data.opinion || data.result?.explanation;
-        } else {
-          document.getElementById('report-text').innerText = isHighRisk 
-            ? "Warning: The analyzed content exhibits patterns typically associated with misinformation or synthetic media. Further verification from authentic sources is recommended."
-            : "The analyzed content passed evaluation with high confidence. No significant indicators of automated manipulation or fake content were detected.";
-        }
-
-        // Date
-        const dateStr = data.timestamp ? new Date(data.timestamp).toLocaleDateString() : new Date().toLocaleDateString();
-        document.getElementById('report-date').innerText = `Date: ${dateStr}`;
-
-      } catch (err) {
-        console.error("Error parsing report data:", err);
+      if (data.explanation || data.opinion || data.result?.explanation) {
+        document.getElementById('report-text').innerText = data.explanation || data.opinion || data.result?.explanation;
+      } else {
+        document.getElementById('report-text').innerText = isHighRisk 
+          ? "Warning: The analyzed content exhibits patterns typically associated with misinformation or synthetic media. Further verification from authentic sources is recommended."
+          : "The analyzed content passed evaluation with high confidence. No significant indicators of automated manipulation or fake content were detected.";
       }
+
+      // 8. Safely Format Timestamp / Date
+      let dateStr = new Date().toLocaleDateString();
+      if (data.timestamp) {
+        dateStr = typeof data.timestamp.toDate === 'function' ? data.timestamp.toDate().toLocaleDateString() : new Date(data.timestamp).toLocaleDateString();
+      } else if (data.createdAt) {
+        dateStr = typeof data.createdAt.toDate === 'function' ? data.createdAt.toDate().toLocaleDateString() : new Date(data.createdAt).toLocaleDateString();
+      }
+      document.getElementById('report-date').innerText = `Date: ${dateStr}`;
     });
   </script>
 </body>
