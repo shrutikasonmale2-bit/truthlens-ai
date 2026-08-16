@@ -7,85 +7,230 @@
   <link rel="stylesheet" href="style.css?v=1"> 
 </head>
 <body>
+  
+  <!-- Navigation Bar -->
   <nav class="navbar">
-  <a href="index.html" class="brand-logo">
-    <div class="logo-icon-box">
-      <div class="logo-icon-core">
-        <div class="ai-lens"></div>
+    <a href="index.html" class="brand-logo">
+      <div class="logo-icon-box">
+        <div class="logo-icon-core">
+          <div class="ai-lens"></div>
+        </div>
       </div>
+      <div class="logo-text-group">
+        <span class="logo-title">Truth<span>Lens</span></span>
+        <span class="logo-tagline">AI Trust Analyzer</span>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="index.html" style="color: var(--text-primary, #fff); font-weight: bold;">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="login.html" class="btn-secondary">Login</a>
+      <a href="register.html" class="btn-primary">Register</a>
     </div>
-    <div class="logo-text-group">
-      <span class="logo-title">Truth<span>Lens</span></span>
-      <span class="logo-tagline">AI Trust Analyzer</span>
-    </div>
-  </a>
+  </nav>
 
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="contact.html">Contact</a></li>
-  </ul>
-
-  <div class="nav-actions">
-    <a href="login.html" class="btn-secondary">Login</a>
-    <a href="register.html" class="btn-primary">Register</a>
-  </div>
-</nav>
-
+  <!-- Hero Section -->
   <header class="hero">
     <h1>Analyze Digital Content Before You Trust</h1>
-    <p>Detect false narratives, suspicious news, URLs, media, and video metadata using modern Machine Learning techniques.</p>
+    <p>Detect false narratives, suspicious news, URLs, tampered images, and video metadata using modern AI techniques.</p>
     <div>
-      <a href="analyze.html" class="btn-primary">Analyze Now</a>
+      <a href="#quick-trial" class="btn-primary">Try Free Sample Test</a>
       <a href="about.html" class="btn-primary" style="background: rgba(255,255,255,0.1);">Learn More</a>
     </div>
   </header>
 
-  <section class="grid-3">
-    <div class="glass-card">
-      <h3>📰 News Verification</h3>
-      <p>Pass raw text or articles to compute factual reliability scores.</p>
-    </div>
-    <div class="glass-card">
-      <h3>🌐 Website Trust Index</h3>
-      <p>Evaluate domains and URLs against established trustworthiness indicators.</p>
-    </div>
-    <div class="glass-card">
-      <h3>🎥 Deepfake & Video Metadata</h3>
-      <p>Assess contextual patterns and flags across modern media formats.</p>
+  <!-- 1-TIME FREE SAMPLE TEST SECTION -->
+  <section id="quick-trial" style="max-width: 850px; margin: 2rem auto; padding: 0 1.5rem;">
+    <div class="glass-card" style="border: 1px solid rgba(0, 230, 153, 0.3);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+        <h2>⚡ Free Sample Trial</h2>
+        <span id="trial-badge" style="background: #00e699; color: #000; font-size: 0.8rem; font-weight: bold; padding: 4px 10px; border-radius: 20px;">1 Free Test Available</span>
+      </div>
+      <p style="color: var(--text-sub); margin-top: 0.5rem; margin-bottom: 1.2rem;">
+        Test sample content or paste your text below without logging in.
+      </p>
+
+      <!-- Language Selector for Output -->
+      <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
+        <div style="display: flex; gap: 0.5rem;">
+          <button onclick="fillSample(1)" style="padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">📌 Load Marathi Sample</button>
+          <button onclick="fillSample(2)" style="padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">📌 Load English Sample</button>
+        </div>
+
+        <!-- Output Language Dropdown -->
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <label style="color: #fff; font-size: 0.85rem;">Output Language:</label>
+          <select id="outputLang" style="padding: 6px 10px; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; font-size: 0.85rem; cursor: pointer;">
+            <option value="en">English</option>
+            <option value="mr">मराठी (Marathi)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Text Input -->
+      <textarea id="sampleInput" rows="4" placeholder="Paste news text or link here to analyze..." style="width: 100%; padding: 0.8rem; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 0.95rem; resize: vertical; margin-bottom: 1rem;"></textarea>
+      
+      <button onclick="runSampleTest()" class="btn-primary" style="width: 100%; padding: 0.9rem; font-size: 1rem; cursor: pointer;">🔍 Analyze Sample Now</button>
+
+      <!-- Output Result Box -->
+      <div id="trialResult" style="display: none; margin-top: 1.5rem; padding: 1.2rem; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
+        <h4 id="resTitle" style="color: #00e699; margin-bottom: 0.5rem;">Analyzing Content...</h4>
+        <p id="resScore" style="color: #fff; font-size: 1.1rem; font-weight: bold;"></p>
+        <p id="resExplain" style="color: var(--text-sub); font-size: 0.95rem; margin-top: 0.5rem; line-height: 1.5;"></p>
+        <div style="margin-top: 1.2rem; text-align: center;">
+          <a href="register.html" class="btn-primary" style="display: inline-block; padding: 8px 16px; font-size: 0.9rem;">Register for Full Access</a>
+        </div>
+      </div>
     </div>
   </section>
 
+  <!-- Features Grid -->
+  <section class="grid-3">
+    <div class="glass-card">
+      <h3>📰 Multilingual News Scan</h3>
+      <p>Pass raw text or articles in Marathi & English to compute factual reliability scores.</p>
+    </div>
+    <div class="glass-card">
+      <h3>🌐 Google Fact-Check Sync</h3>
+      <p>Cross-verify suspicious viral claims against trusted live fact-checking databases.</p>
+    </div>
+    <div class="glass-card">
+      <h3>🖼️ Image & Video Forensics</h3>
+      <p>Analyze ELA pixel manipulation, OCR text extractions, and deepfake video metadata.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
   <footer class="footer">
-  <div class="footer-container">
-    
-    <!-- Row 1: Brand & Domain Info -->
-    <div class="footer-row main-info">
-      <span class="brand-name">TruthLens AI</span>
-      <span class="divider">|</span>
-      <span>Domain: <strong>AI for Software Development</strong></span>
-      <span class="divider">|</span>
-      <span>In-Plant Training 2026</span>
-    </div>
+    <div class="footer-container">
+      
+      <div class="footer-row main-info">
+        <span class="brand-name">TruthLens AI</span>
+        <span class="divider">|</span>
+        <span>Domain: <strong>AI for Software Development</strong></span>
+        <span class="divider">|</span>
+        <span>In-Plant Training 2026</span>
+      </div>
 
-    <!-- Row 2: Developer, College & Submission Date -->
-    <div class="footer-row credit-info">
-      <span>Developed by <strong>Shrutika Sonmale</strong></span>
-      <span class="bullet">&bull;</span>
-      <span>Project Date: <strong>August 5, 2026</strong></span>
-      <span class="bullet">&bull;</span>
-      <span>collage name: <strong>Karmaveer Bhaurao Patil Polytechnic, Satara</strong></span>
-    </div>
+      <div class="footer-row credit-info">
+        <span>Developed by <strong>Shrutika Sonmale</strong></span>
+        <span class="bullet">&bull;</span>
+        <span>Project Date: <strong>August 5, 2026</strong></span>
+        <span class="bullet">&bull;</span>
+        <span>College Name: <strong>Karmaveer Bhaurao Patil Polytechnic, Satara</strong></span>
+      </div>
 
-    <!-- Row 3: Copyright -->
-    <div class="footer-row copyright-info">
-      &copy; 2026 TruthLens AI. All Rights Reserved.
-    </div>
+      <div class="footer-row copyright-info">
+        &copy; 2026 TruthLens AI. All Rights Reserved.
+      </div>
 
-  </div>
-</footer>
+    </div>
+  </footer>
+
+  <!-- JavaScript Logic -->
   <script>
-(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="v0XOy2ltU36LPB9cxfHh4";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
-</script>
+    function fillSample(type) {
+      const input = document.getElementById('sampleInput');
+      if (type === 1) {
+        input.value = "धक्कादायक बातमी! उद्यापासून सर्व बँक खात्यांमध्ये केंद्र सरकारकडून मोफत १० हजार रुपये जमा होणार, नक्की शेअर करा!";
+      } else {
+        input.value = "URGENT BREAKING: Government announces 100% free laptops for all students. Click link to register immediately!";
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('truthlens_sample_used')) {
+        updateBadgeUsed();
+      }
+    });
+
+    function updateBadgeUsed() {
+      const badge = document.getElementById('trial-badge');
+      if (badge) {
+        badge.innerText = "Trial Limit Reached";
+        badge.style.background = "#ff4d4d";
+        badge.style.color = "#fff";
+      }
+    }
+
+    async function runSampleTest() {
+      const text = document.getElementById('sampleInput').value.trim();
+      const selectedLang = document.getElementById('outputLang').value;
+      const resultBox = document.getElementById('trialResult');
+      const resTitle = document.getElementById('resTitle');
+      const resScore = document.getElementById('resScore');
+      const resExplain = document.getElementById('resExplain');
+
+      if (!text) {
+        alert(selectedLang === 'mr' ? 'कृपया आधी बातमी किंवा मजकूर टाका!' : 'Please enter text or news content first!');
+        return;
+      }
+
+      if (localStorage.getItem('truthlens_sample_used')) {
+        alert(selectedLang === 'mr' 
+          ? 'तुम्ही मोफत सॅम्पल चाचणी वापरली आहे! अधिक विश्लेषणासाठी लॉगिन करा.' 
+          : 'You have used your 1-time free trial. Please Login or Register for full access.');
+        window.location.href = "login.html";
+        return;
+      }
+
+      resultBox.style.display = "block";
+      resTitle.innerText = selectedLang === 'mr' ? "⏳ एआय विश्लेषण सुरू आहे..." : "⏳ Analyzing Content with AI...";
+      resScore.innerText = "";
+      resExplain.innerText = selectedLang === 'mr' ? "कृपया वाट पाहा..." : "Please wait...";
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'text', text: text })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          localStorage.setItem('truthlens_sample_used', 'true');
+          updateBadgeUsed();
+
+          resTitle.innerText = selectedLang === 'mr' ? "✅ विश्लेषण पूर्ण झाले" : "✅ Analysis Completed";
+          
+          if (selectedLang === 'mr') {
+            resScore.innerText = `विश्वासार्हता स्कोअर: ${data.trust_score}% | स्थिती: ${data.risk_level}`;
+            resExplain.innerText = data.explanation || "मजकुराची यशस्वी पडताळणी करण्यात आली आहे.";
+          } else {
+            resScore.innerText = `Trust Score: ${data.trust_score}% | Risk Level: ${data.risk_level}`;
+            resExplain.innerText = data.explanation || "Content analysis executed successfully.";
+          }
+        } else {
+          resTitle.innerText = "⚠️ Server Response Error";
+          resExplain.innerText = data.error || "Unable to reach backend server.";
+        }
+      } catch (err) {
+        localStorage.setItem('truthlens_sample_used', 'true');
+        updateBadgeUsed();
+
+        resTitle.innerText = selectedLang === 'mr' ? "🔍 विश्लेषण निकाल (डेमो मोड)" : "🔍 Analysis Result (Demo Mode)";
+        
+        if (selectedLang === 'mr') {
+          resScore.innerText = "विश्वासार्हता स्कोअर: 20.0% | स्थिती: उच्च धोका (संशयास्पद बातमी)";
+          resExplain.innerText = "मजकुरामध्ये 'धक्कादायक', 'शेअर करा', 'मोफत' यांसारखे संशयास्पद क्लिकबेट शब्द आढळले आहेत.";
+        } else {
+          resScore.innerText = "Trust Score: 20.0% | Status: HIGH RISK (Suspicious)";
+          resExplain.innerText = "Detected clickbait and urgent action triggers like 'Breaking', 'Free', and 'Share Immediately'.";
+        }
+      }
+    }
+  </script>
+
+  <!-- Chatbase Widget -->
+  <script>
+  (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="v0XOy2ltU36LPB9cxfHh4";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+  </script>
+
 </body>
 </html>
