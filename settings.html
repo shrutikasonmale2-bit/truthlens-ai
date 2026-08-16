@@ -7,12 +7,11 @@
   <link rel="stylesheet" href="style.css?v=1">
   <link rel="stylesheet" href="dashboard.css?v=1">
   <style>
-    /* Settings Custom Styling */
     .settings-grid {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
-      max-width: 800px;
+      max-width: 850px;
     }
     
     .setting-card {
@@ -51,7 +50,7 @@
     }
 
     .setting-info {
-      max-width: 70%;
+      max-width: 68%;
     }
     .setting-label {
       color: #ffffff;
@@ -70,19 +69,19 @@
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #ffffff;
-      padding: 0.6rem 1rem;
+      padding: 0.65rem 1rem;
       border-radius: 8px;
       font-size: 0.88rem;
       outline: none;
       cursor: pointer;
-      min-width: 180px;
+      min-width: 200px;
     }
     .form-select option {
       background: #1e1e2d;
       color: #ffffff;
     }
 
-    /* UI Toggle Switch */
+    /* Modern Switch Styling */
     .switch {
       position: relative;
       display: inline-block;
@@ -122,7 +121,6 @@
       transform: translateX(24px);
     }
 
-    /* Toast Notification */
     .toast-message {
       position: fixed;
       bottom: 24px;
@@ -180,64 +178,78 @@
       <a href="#" id="logout-btn" style="color: #ef4444; margin-top: auto;">Logout</a>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main class="main-content">
       <h2>System Preferences & Settings</h2>
-      <p style="color: var(--text-sub, #9ca3af); margin-bottom: 1.5rem;">Configure application defaults, AI engine parameters, and privacy controls.</p>
+      <p style="color: var(--text-sub, #9ca3af); margin-bottom: 1.5rem;">Customise UI themes, AI engine parameters, notifications, and privacy preferences.</p>
 
       <form id="settings-form" class="settings-grid">
         
-        <!-- Section 1: General & Display Preferences -->
+        <!-- Section 1: UI & Theme Customization -->
         <div class="setting-card">
           <div class="setting-card-header">
-            <div class="setting-card-title">🌐 General Preferences</div>
+            <div class="setting-card-title">🎨 Visual Themes & UI</div>
           </div>
 
           <div class="setting-row">
             <div class="setting-info">
-              <span class="setting-label">Default Report Language</span>
-              <span class="setting-desc">Choose the default display language for audit findings and reports.</span>
+              <span class="setting-label">Default Analysis Theme</span>
+              <span class="setting-desc">Select visual color theme for dashboard analytics and reports.</span>
+            </div>
+            <select id="pref-theme" class="form-select">
+              <option value="dark-saas">Dark SaaS (Default)</option>
+              <option value="midnight-purple">Midnight Purple</option>
+              <option value="cyber-neon">Cyberpunk Neon</option>
+              <option value="light-clean">Light Clean Mode</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Report Display Language</span>
+              <span class="setting-desc">Default language used when generating truth reports.</span>
             </div>
             <select id="pref-language" class="form-select">
               <option value="en">English (Default)</option>
               <option value="mr">मराठी (Marathi)</option>
-            </select>
-          </div>
-
-          <div class="setting-row">
-            <div class="setting-info">
-              <span class="setting-label">Interface Theme</span>
-              <span class="setting-desc">Select visual theme preference for dashboard interface.</span>
-            </div>
-            <select id="pref-theme" class="form-select">
-              <option value="dark-saas">Dark Glassmorphic (Active)</option>
-              <option value="system">System Preference</option>
+              <option value="hi">हिंदी (Hindi)</option>
             </select>
           </div>
         </div>
 
-        <!-- Section 2: AI Forensic Engine Configuration -->
+        <!-- Section 2: AI Engine & Detection Model -->
         <div class="setting-card">
           <div class="setting-card-header">
-            <div class="setting-card-title">⚡ AI Detection Engine</div>
+            <div class="setting-card-title">⚡ AI Engine Configuration</div>
           </div>
 
           <div class="setting-row">
             <div class="setting-info">
-              <span class="setting-label">Confidence Sensitivity Threshold</span>
-              <span class="setting-desc">Adjust how strictly the ML model flags potential misinformation or manipulation.</span>
+              <span class="setting-label">Primary Detection Engine</span>
+              <span class="setting-desc">Select the AI model architecture for content verification.</span>
+            </div>
+            <select id="pref-model" class="form-select">
+              <option value="truthlens-v2">TruthLens Neural v2 (Fast)</option>
+              <option value="truthlens-pro">TruthLens DeepScan Pro (High Accuracy)</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">ML Model Confidence Threshold</span>
+              <span class="setting-desc">Adjust sensitivity for flagging potential misinformation.</span>
             </div>
             <select id="pref-threshold" class="form-select">
-              <option value="balanced">Balanced (Recommended)</option>
-              <option value="strict">Strict (High Precision)</option>
+              <option value="balanced">Standard (Balanced Precision)</option>
+              <option value="strict">High Strictness (Aggressive Flagging)</option>
               <option value="lenient">Lenient (Low False Positives)</option>
             </select>
           </div>
 
           <div class="setting-row">
             <div class="setting-info">
-              <span class="setting-label">Deep Linguistic Analysis</span>
-              <span class="setting-desc">Enable secondary semantic and sentiment evaluation on scanned texts.</span>
+              <span class="setting-label">Deep Linguistic Scan</span>
+              <span class="setting-desc">Perform sentiment and context manipulation checks on input text.</span>
             </div>
             <label class="switch">
               <input type="checkbox" id="pref-deep-analysis" checked>
@@ -246,7 +258,36 @@
           </div>
         </div>
 
-        <!-- Section 3: Data, Privacy & Storage -->
+        <!-- Section 3: Notifications & Alerts -->
+        <div class="setting-card">
+          <div class="setting-card-header">
+            <div class="setting-card-title">🔔 Notifications & Alerts</div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Email Scan Summaries</span>
+              <span class="setting-desc">Receive periodic email reports of high-risk misinformation scans.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="pref-email-alerts">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Browser Notifications</span>
+              <span class="setting-desc">Show real-time alert popups when background scan completes.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="pref-browser-notify" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Section 4: Data & Privacy Controls -->
         <div class="setting-card">
           <div class="setting-card-header">
             <div class="setting-card-title">🔒 Privacy & Storage</div>
@@ -254,8 +295,8 @@
 
           <div class="setting-row">
             <div class="setting-info">
-              <span class="setting-label">Save Local Scan History</span>
-              <span class="setting-desc">Store recent scan logs in browser storage for quick offline retrieval.</span>
+              <span class="setting-label">Auto-Save Scan History</span>
+              <span class="setting-desc">Keep recent analysis logs stored in local session memory.</span>
             </div>
             <label class="switch">
               <input type="checkbox" id="pref-save-history" checked>
@@ -266,15 +307,15 @@
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Clear Cached Application Data</span>
-              <span class="setting-desc">Purge temporary scan cache and saved report sessions.</span>
+              <span class="setting-desc">Permanently remove saved local scan caches and reports.</span>
             </div>
             <button type="button" class="danger-btn" onclick="clearLocalCache()">Clear Cache</button>
           </div>
         </div>
 
-        <!-- Form Actions -->
+        <!-- Action Buttons -->
         <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-          <button type="submit" class="btn-primary" style="background: #7c3aed; color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Settings</button>
+          <button type="submit" class="btn-primary" style="background: #7c3aed; color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Preferences</button>
           <button type="button" onclick="loadSettings()" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 12px 24px; border-radius: 8px; font-weight: 500; cursor: pointer;">Reset Changes</button>
         </div>
 
@@ -283,7 +324,6 @@
   </div>
 
   <script>
-    // Toast Notification Utility
     function showToast(message, isError = false) {
       const toast = document.getElementById('toast');
       toast.innerText = message;
@@ -292,32 +332,39 @@
       setTimeout(() => { toast.style.display = 'none'; }, 3000);
     }
 
-    // Load Saved Settings from LocalStorage
     function loadSettings() {
       const settings = JSON.parse(localStorage.getItem('appSettings')) || {
-        language: 'en',
         theme: 'dark-saas',
-        threshold: 'balanced',
+        language: 'en',
+        model: 'truthlens-pro',
+        threshold: 'strict',
         deepAnalysis: true,
+        emailAlerts: false,
+        browserNotify: true,
         saveHistory: true
       };
 
-      document.getElementById('pref-language').value = settings.language;
       document.getElementById('pref-theme').value = settings.theme;
+      document.getElementById('pref-language').value = settings.language;
+      document.getElementById('pref-model').value = settings.model;
       document.getElementById('pref-threshold').value = settings.threshold;
       document.getElementById('pref-deep-analysis').checked = settings.deepAnalysis;
+      document.getElementById('pref-email-alerts').checked = settings.emailAlerts;
+      document.getElementById('pref-browser-notify').checked = settings.browserNotify;
       document.getElementById('pref-save-history').checked = settings.saveHistory;
     }
 
-    // Save Settings Event Listener
     document.getElementById('settings-form').addEventListener('submit', (e) => {
       e.preventDefault();
 
       const newSettings = {
-        language: document.getElementById('pref-language').value,
         theme: document.getElementById('pref-theme').value,
+        language: document.getElementById('pref-language').value,
+        model: document.getElementById('pref-model').value,
         threshold: document.getElementById('pref-threshold').value,
         deepAnalysis: document.getElementById('pref-deep-analysis').checked,
+        emailAlerts: document.getElementById('pref-email-alerts').checked,
+        browserNotify: document.getElementById('pref-browser-notify').checked,
         saveHistory: document.getElementById('pref-save-history').checked
       };
 
@@ -325,18 +372,15 @@
       showToast('Settings saved successfully!');
     });
 
-    // Clear Cache Action
     function clearLocalCache() {
       if (confirm("Are you sure you want to clear cached analysis data?")) {
         localStorage.removeItem('latestReport');
-        sessionStorage.removeItem('latestResult');
-        showToast('Local scan cache cleared successfully!');
+        sessionStorage.clear();
+        showToast('Local scan cache cleared!');
       }
     }
 
-    // Initialize on Page Load
     document.addEventListener('DOMContentLoaded', loadSettings);
   </script>
-
 </body>
 </html>
