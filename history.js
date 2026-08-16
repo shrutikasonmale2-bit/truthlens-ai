@@ -1,6 +1,13 @@
 // Path तपासा: जर firebase.js 'js' फोल्डरमध्ये असेल तर './js/firebase.js' करा
 import { auth, db, collection, query, where, getDocs, onAuthStateChanged, doc, deleteDoc } from './firebase.js';
 
+// XSS हल्ल्यांपासून बचाव करण्यासाठी Snippet स्वच्छ करणारे Helper Function
+function escapeHTML(str) {
+  return String(str || '').replace(/[&<>"']/g, (m) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+  })[m]);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   onAuthStateChanged(auth, async (user) => {
     const loadingElem = document.getElementById('loading-history');
@@ -46,16 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
           ? `<span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #ef4444;">HIGH RISK</span>`
           : `<span style="color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #22c55e;">LOW RISK</span>`;
 
-        // ३. Snippet स्वच्छ करणे
+        // ३. Snippet स्वच्छ करणे (XSS Safe)
         let rawSnippet = item.extracted_text || item.contentSnippet || item.text || item.scraped_snippet || 'No preview available';
         rawSnippet = rawSnippet.replace(/^"+|"+$/g, '').trim();
+        const safeSnippet = escapeHTML(rawSnippet);
+        const safeCategory = escapeHTML(item.category || item.contentType || 'Text');
 
         historyHTML += `
           <div class="history-item" style="display: flex; justify-content: space-between; padding: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); align-items: center; background: rgba(255,255,255,0.02); margin-bottom: 8px; border-radius: 8px;">
             <div style="max-width: 60%;">
-              <span style="font-size: 0.75rem; background: #7c3aed; color: #fff; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 600;">${item.category || item.contentType || 'Text'}</span>
-              <p style="margin-top: 0.6rem; color: #e2e8f0; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;" title="${rawSnippet}">
-                "${rawSnippet}"
+              <span style="font-size: 0.75rem; background: #7c3aed; color: #fff; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 600;">${safeCategory}</span>
+              <p style="margin-top: 0.6rem; color: #e2e8f0; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;" title="${safeSnippet}">
+                "${safeSnippet}"
               </p>
             </div>
             <div style="text-align: right; display: flex; align-items: center; gap: 1rem;">
@@ -73,28 +82,33 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       });
 
-      if (loadingElem && loadingElem.parentElement) {
-        loadingElem.parentElement.innerHTML = historyHTML;
-      } else if (historyContainer) {
-        historyContainer.innerHTML = historyHTML;
-      }
+      const targetContainer = (loadingElem && loadingElem.parentElement) ? loadingElem.parentElement : historyContainer;
+      
+      if (targetContainer) {
+        targetContainer.innerHTML = historyHTML;
 
-      // ४. Delete बटणासाठी Event Listeners
-      document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const id = e.target.getAttribute('data-id');
+        // ४. Event Delegation द्वारे Delete Button हाताळणे
+        targetContainer.addEventListener('click', async (e) => {
+          const deleteBtn = e.target.closest('.delete-btn');
+          if (!deleteBtn) return;
+
+          const id = deleteBtn.getAttribute('data-id');
           if (confirm('Are you sure you want to delete this scan record?')) {
             try {
               await deleteDoc(doc(db, 'analyses', id));
-              const itemRow = e.target.closest('.history-item');
+              const itemRow = deleteBtn.closest('.history-item');
               if (itemRow) itemRow.remove();
+
+              if (targetContainer.querySelectorAll('.history-item').length === 0) {
+                targetContainer.innerHTML = '<div id="loading-history" style="text-align: center; padding: 1.5rem; color: var(--text-sub);">No scan history found.</div>';
+              }
             } catch (err) {
               console.error("Delete error:", err);
               alert("Failed to delete record.");
             }
           }
         });
-      });
+      }
 
     } catch (error) {
       console.error("Error loading history:", error);
