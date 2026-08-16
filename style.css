@@ -563,3 +563,53 @@ body::after {
   transition: width 1s ease-in-out;
   border-radius: 10px;
 }
+/* Light Mode Dynamic Text Colors */
+body.theme-light-clean {
+  background-color: #f4f5f9 !important;
+  color: #1e293b !important;
+}
+
+/* Sidebar Menu Text in Light Mode */
+body.theme-light-clean .sidebar a {
+  color: #64748b !important;
+}
+
+body.theme-light-clean .sidebar a:hover,
+body.theme-light-clean .sidebar a.active {
+  color: #ffffff !important; /* Active link text */
+  background: #7c3aed !important;
+}
+
+/* Main Titles and Descriptions */
+body.theme-light-clean h1,
+body.theme-light-clean h2,
+body.theme-light-clean h3,
+body.theme-light-clean h4 {
+  color: #0f172a !important;
+}
+
+body.theme-light-clean p,
+body.theme-light-clean label,
+body.theme-light-clean .setting-desc {
+  color: #475569 !important;
+}
+
+/* Glass Cards and Inputs in Light Mode */
+body.theme-light-clean .glass-card,
+body.theme-light-clean .setting-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.theme-light-clean input,
+body.theme-light-clean textarea,
+body.theme-light-clean select {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+body.theme-light-clean textarea::placeholder {
+  color: #94a3b8 !important;
+}
