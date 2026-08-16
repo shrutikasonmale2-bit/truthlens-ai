@@ -9,6 +9,8 @@
 </head>
 <body>
   <div class="dashboard-layout">
+    
+    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="logo">TruthLens AI</div>
       <a href="dashboard.html" class="active">Dashboard</a>
@@ -17,54 +19,73 @@
       <a href="report.html">Reports</a>
       <a href="profile.html">Profile</a>
       <a href="settings.html">Settings</a>
+      <button id="logoutBtn" style="margin-top: auto; background: rgba(255, 77, 77, 0.15); border: 1px solid rgba(255, 77, 77, 0.3); color: #ff6b6b; padding: 10px; border-radius: 8px; cursor: pointer; text-align: left; width: 100%; font-size: 0.95rem;">🚪 Logout</button>
     </aside>
 
+    <!-- Main Content Area -->
     <main class="main-content">
-      <h2>Welcome Back</h2>
-      <p style="color: var(--text-sub); margin-bottom: 2rem;">Overview of your digital trust metrics.</p>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+        <div>
+          <h2 id="user-greeting">Welcome Back</h2>
+          <p style="color: var(--text-sub);">Overview of your digital content trust metrics & verification logs.</p>
+        </div>
+        <div style="background: rgba(0, 230, 153, 0.1); border: 1px solid rgba(0, 230, 153, 0.3); padding: 8px 16px; border-radius: 20px; color: #00e699; font-size: 0.85rem; font-weight: bold;">
+          🟢 Backend Active
+        </div>
+      </div>
 
-      <!-- Metric Grid -->
+      <!-- Metric Cards Grid -->
       <div class="metric-grid">
         <div class="glass-card metric-card">
           <h4>Total Analyzed</h4>
           <h3 id="stat-total">0</h3>
+          <p style="color: var(--text-sub); font-size: 0.8rem; margin-top: 0.4rem;">Total Scans Executed</p>
         </div>
         <div class="glass-card metric-card">
-          <h4>High Trust</h4>
-          <h3 id="stat-safe">0</h3>
+          <h4>High Trust Content</h4>
+          <h3 id="stat-safe" style="color: #00e699;">0</h3>
+          <p style="color: var(--text-sub); font-size: 0.8rem; margin-top: 0.4rem;">Score ≥ 50% (Verified)</p>
         </div>
         <div class="glass-card metric-card">
           <h4>Suspicious Content</h4>
-          <h3 id="stat-risky">0</h3>
+          <h3 id="stat-risky" style="color: #ff4d4d;">0</h3>
+          <p style="color: var(--text-sub); font-size: 0.8rem; margin-top: 0.4rem;">Score < 50% (High Risk)</p>
         </div>
       </div>
 
-      <!-- Actions & History Redirect -->
+      <!-- Quick Actions Section -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
         <div class="glass-card">
-          <h3>Quick Scan</h3>
-          <p style="color: var(--text-sub); margin-bottom: 1.5rem;">Directly jump to content evaluation tool.</p>
+          <h3>⚡ Quick Scan</h3>
+          <p style="color: var(--text-sub); margin-bottom: 1.5rem; line-height: 1.5;">Directly evaluate Marathi & English news text, image ELA forensics, or deepfake metadata.</p>
           <a href="analyze.html" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none;">Start New Analysis</a>
         </div>
 
         <div class="glass-card">
-          <h3>Detailed History</h3>
-          <p style="color: var(--text-sub); margin-bottom: 1.5rem;">View and manage your full verification log.</p>
-          <a href="history.html" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none; background: rgba(255,255,255,0.1);">Go to History Tab</a>
+          <h3>📜 Detailed History Log</h3>
+          <p style="color: var(--text-sub); margin-bottom: 1.5rem; line-height: 1.5;">Review previous predictions, source claims, OCR text extractions, and trust ratings.</p>
+          <a href="history.html" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none; background: rgba(255,255,255,0.1);">View History Tab</a>
         </div>
       </div>
     </main>
   </div>
 
+  <!-- Firebase Script Integration -->
   <script type="module">
-    import { auth, db, collection, getDocs, query, where, onAuthStateChanged } from './firebase.js';
+    import { auth, db, collection, getDocs, query, where, onAuthStateChanged, signOut } from './firebase.js';
 
+    // 1. Monitor Authentication State
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = 'login.html';
         return;
       }
 
+      // Personalized Header Greeting
+      const userName = user.displayName || user.email.split('@')[0];
+      document.getElementById('user-greeting').textContent = `Welcome Back, ${userName}`;
+
+      // 2. Fetch Dashboard Analytics from Firestore
       try {
         const q = query(collection(db, 'analyses'), where('userId', '==', user.uid));
         const querySnapshot = await getDocs(q);
@@ -91,6 +112,16 @@
 
       } catch (error) {
         console.error("Dashboard metrics load error:", error);
+      }
+    });
+
+    // 3. Logout Event Handling
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        window.location.href = 'login.html';
+      } catch (err) {
+        console.error("Logout Error:", err);
       }
     });
   </script>
