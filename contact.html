@@ -9,37 +9,61 @@
   <link rel="stylesheet" href="dashboard.css?v=1">
 </head>
 <body>
+
+  <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="logo">TruthLens AI</div>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="about.html">About</a></li>
-      <li><a href="contact.html">Contact</a></li>
+      <li><a href="contact.html" style="color: var(--text-primary, #fff); font-weight: bold;">Contact</a></li>
     </ul>
-    <a href="login.html" class="btn-primary">Get Started</a>
+    <a href="index.html" class="btn-primary">Get Started</a>
   </nav>
 
-  <div style="max-width: 600px; margin: 4rem auto; padding: 0 1.5rem;">
+  <!-- Main Container -->
+  <div style="max-width: 800px; margin: 4rem auto; padding: 0 1.5rem;">
     <div class="glass-card">
-      <h2>Contact Us</h2>
-      <p style="color: var(--text-sub); margin-bottom: 2rem;">Have questions about the platform?</p>
+      <h2>Contact Us / संपर्क साधा</h2>
+      <p style="color: var(--text-sub); margin-bottom: 2rem; line-height: 1.6;">
+        Have questions, feedback, or need support with Marathi & English media analysis? Send us a message below.
+      </p>
       
-      <form onsubmit="event.preventDefault(); alert('Message sent!');">
-        <div class="form-group">
-          <label>Your Name</label>
-          <input type="text" class="form-control" required placeholder="Name">
+      <!-- Contact Form -->
+      <form onsubmit="event.preventDefault(); alert('धन्यवाद! तुमचा मेसेज यशस्वीपणे पाठवला गेला आहे.');">
+        <div class="form-group" style="margin-bottom: 1.2rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: #fff;">Your Name / तुमचे नाव</label>
+          <input type="text" class="form-control" required placeholder="Shrutika Sonmale" style="width: 100%; padding: 0.8rem; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
         </div>
-        <div class="form-group">
-          <label>Your Email</label>
-          <input type="email" class="form-control" required placeholder="Email">
+        
+        <div class="form-group" style="margin-bottom: 1.2rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: #fff;">Your Email / ईमेल आयडी</label>
+          <input type="email" class="form-control" required placeholder="name@example.com" style="width: 100%; padding: 0.8rem; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
         </div>
-        <div class="form-group">
-          <label>Message</label>
-          <textarea class="form-control" required placeholder="Write your inquiry here..."></textarea>
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: #fff;">Message / संदेश</label>
+          <textarea class="form-control" rows="5" required placeholder="Write your inquiry or feedback here..." style="width: 100%; padding: 0.8rem; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; resize: vertical;"></textarea>
         </div>
-        <button type="submit" class="btn-primary">Send Message</button>
+        
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 0.9rem; cursor: pointer;">Send Message</button>
       </form>
+
+      <!-- Extra Contact Details -->
+      <div style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; color: var(--text-sub); font-size: 0.9rem;">
+        <div>
+          <strong style="color: #fff;">Developer:</strong> Shrutika Sonmale
+        </div>
+        <div>
+          <strong style="color: #fff;">Support Languages:</strong> Marathi & English
+        </div>
+        <div>
+          <strong style="color: #fff;">Project:</strong> TruthLens AI Framework
+        </div>
+      </div>
+
     </div>
   </div>
+
 </body>
-</html>
+</html>s
