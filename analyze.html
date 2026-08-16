@@ -14,7 +14,7 @@
       display: flex;
       gap: 10px;
       margin-bottom: 1.5rem;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.1));
       padding-bottom: 10px;
       flex-wrap: wrap;
     }
@@ -68,10 +68,22 @@
       font-size: 0.8rem;
       color: #94a3b8;
     }
+
+    /* Output Result Box */
+    .result-card {
+      display: none;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(124, 58, 237, 0.4);
+    }
   </style>
 </head>
 <body>
   <div class="dashboard-layout">
+    
+    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="logo">TruthLens AI</div>
       <a href="dashboard.html">Dashboard</a>
@@ -82,6 +94,7 @@
       <a href="settings.html">Settings</a>
     </aside>
 
+    <!-- Main Content Area -->
     <main class="main-content">
       <h2>Analyze Digital Content</h2>
       <p style="color: var(--text-sub); margin-bottom: 2rem;">Choose media type and run AI verification & deepfake detection pipeline.</p>
@@ -98,32 +111,32 @@
         <form id="analyze-form">
           <!-- 1. Text Content Tab -->
           <div id="text-tab" class="tab-content active">
-            <label style="display: block; margin-bottom: 0.5rem;">Paste News Text / Claim Content</label>
-            <textarea id="text-input" rows="5" placeholder="Paste news article or suspicious message text..." style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px; resize: vertical;"></textarea>
+            <label style="display: block; margin-bottom: 0.5rem; color: #fff;">Paste News Text / Claim Content</label>
+            <textarea id="text-input" rows="5" placeholder="Paste news article or suspicious message text (Marathi/English)..." style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color, rgba(255,255,255,0.15)); color: white; border-radius: 8px; resize: vertical;"></textarea>
           </div>
 
           <!-- 2. Web URL Scraper Tab -->
           <div id="url-tab" class="tab-content">
-            <label style="display: block; margin-bottom: 0.5rem;">Enter Article / News Website Link</label>
-            <input type="url" id="url-input" placeholder="https://example.com/suspicious-article" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+            <label style="display: block; margin-bottom: 0.5rem; color: #fff;">Enter Article / News Website Link</label>
+            <input type="url" id="url-input" placeholder="https://example.com/suspicious-article" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color, rgba(255,255,255,0.15)); color: white; border-radius: 8px;">
             <span class="input-hint">Scrapes online news content & cross-verifies source domain reputation.</span>
           </div>
 
           <!-- 3. Reels & Deepfake Video Tab -->
           <div id="reels-tab" class="tab-content">
-            <label style="display: block; margin-bottom: 0.5rem;">Paste Instagram Reel / YouTube Short URL</label>
-            <input type="text" id="reel-url" placeholder="https://www.instagram.com/reel/... or YouTube Short Link" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+            <label style="display: block; margin-bottom: 0.5rem; color: #fff;">Paste Instagram Reel / YouTube Short URL</label>
+            <input type="text" id="reel-url" placeholder="https://www.instagram.com/reel/... or YouTube Short Link" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color, rgba(255,255,255,0.15)); color: white; border-radius: 8px;">
             
             <p class="or-divider">— OR UPLOAD VIDEO FILE —</p>
             
-            <input type="file" id="video-file" accept="video/mp4,video/mkv,video/avi" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+            <input type="file" id="video-file" accept="video/mp4,video/mkv,video/avi" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color, rgba(255,255,255,0.15)); color: white; border-radius: 8px;">
             <span class="input-hint">Checks facial frame consistency, lip-sync mismatch & synthetic voice artifacts.</span>
           </div>
 
           <!-- 4. Screenshot / Image OCR Tab -->
           <div id="image-tab" class="tab-content">
-            <label style="display: block; margin-bottom: 0.5rem;">Upload Image or WhatsApp Forward Screenshot</label>
-            <input type="file" id="image-file" accept="image/*" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+            <label style="display: block; margin-bottom: 0.5rem; color: #fff;">Upload Image or WhatsApp Forward Screenshot</label>
+            <input type="file" id="image-file" accept="image/*" style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color, rgba(255,255,255,0.15)); color: white; border-radius: 8px;">
             <span class="input-hint">Runs OCR text extraction, Error Level Analysis (ELA) & visual manipulation detection.</span>
           </div>
 
@@ -140,9 +153,27 @@
           </button>
         </form>
       </div>
+
+      <!-- Analysis Output Container -->
+      <div id="result-box" class="result-card">
+        <h3 style="color: #00e699; margin-bottom: 0.8rem;">🔍 TruthLens AI Verification Result</h3>
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <div>
+            <span style="color: var(--text-sub); font-size: 0.85rem;">Trust Score:</span>
+            <h2 id="res-score" style="color: #fff; margin-top: 2px;">--%</h2>
+          </div>
+          <div>
+            <span style="color: var(--text-sub); font-size: 0.85rem;">Risk Assessment:</span>
+            <h2 id="res-risk" style="color: #ff4d4d; margin-top: 2px;">--</h2>
+          </div>
+        </div>
+        <p style="color: var(--text-sub); font-size: 0.9rem; margin-bottom: 0.5rem;"><strong>Analysis Explanation:</strong></p>
+        <p id="res-explanation" style="color: #fff; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; font-size: 0.95rem; line-height: 1.5;"></p>
+      </div>
+
     </main>
   </div>
 
-<script type="module" src="analyze.js?v=999"></script>
+  <script type="module" src="analyze.js?v=999"></script>
 </body>
 </html>
