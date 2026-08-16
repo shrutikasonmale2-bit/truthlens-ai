@@ -7,26 +7,81 @@
   <link rel="stylesheet" href="style.css?v=1">
 </head>
 <body>
+
+  <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="logo">TruthLens AI</div>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
-      <li><a href="about.html">About</a></li>
+      <li><a href="about.html" style="color: var(--text-primary, #fff); font-weight: bold;">About</a></li>
       <li><a href="contact.html">Contact</a></li>
     </ul>
-    <a href="login.html" class="btn-primary">Get Started</a>
+    <a href="index.html" class="btn-primary">Get Started</a>
   </nav>
 
-  <div style="max-width: 900px; margin: 5rem auto; padding: 0 2rem;">
+  <!-- Main Content Container -->
+  <div style="max-width: 950px; margin: 4rem auto; padding: 0 1.5rem;">
+    
+    <!-- About Project Card -->
     <div class="glass-card">
       <h2>About TruthLens AI</h2>
       <p style="color: var(--text-sub); margin-top: 1rem; line-height: 1.8;">
-        TruthLens AI is an advanced machine learning framework developed to evaluate digital content trustworthiness across multiple formats including textual articles, links, and video/media metadata.
+        TruthLens AI is an advanced multi-modal authenticity detection framework developed to evaluate digital content trustworthiness in both <strong>Marathi and English</strong> languages. It supports multiple formats including text news, social media links, image screenshots, and video metadata.
       </p>
       <p style="color: var(--text-sub); margin-top: 1rem; line-height: 1.8;">
-        Created by <strong>Shrutika Sonmale</strong> as a capstone digital trust solution.
+        Created by <strong>Shrutika Sonmale</strong> as a capstone digital trust solution to combat regional misinformation, edited screenshots, viral fake claims, and AI-manipulated content.
       </p>
     </div>
+
+    <!-- Core Features Section -->
+    <div class="glass-card" style="margin-top: 2rem;">
+      <h2>Core Capabilities / मुख्य वैशिष्ट्ये</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+        
+        <div style="padding: 1.2rem; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255,255,255,0.08);">
+          <h3 style="margin-bottom: 0.5rem;">🌐 Multilingual NLP (मराठी + English)</h3>
+          <p style="color: var(--text-sub); line-height: 1.6; font-size: 0.95rem;">
+            Analyzes news articles and WhatsApp forwards in Marathi and English to detect clickbait patterns, deceptive headlines, and misleading claims.
+          </p>
+        </div>
+
+        <div style="padding: 1.2rem; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255,255,255,0.08);">
+          <h3 style="margin-bottom: 0.5rem;">🔍 Live Fact-Check Verification</h3>
+          <p style="color: var(--text-sub); line-height: 1.6; font-size: 0.95rem;">
+            Integrated with Google Fact-Check Tools API to instantly match claims against verified databases from trusted fact-checking organizations.
+          </p>
+        </div>
+
+        <div style="padding: 1.2rem; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255,255,255,0.08);">
+          <h3 style="margin-bottom: 0.5rem;">🖼️ Image Forensics & Marathi OCR</h3>
+          <p style="color: var(--text-sub); line-height: 1.6; font-size: 0.95rem;">
+            Combines Tesseract OCR (Marathi + English) with Error Level Analysis (ELA) to extract embedded text and detect Photoshop or pixel manipulations in screenshots.
+          </p>
+        </div>
+
+        <div style="padding: 1.2rem; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255,255,255,0.08);">
+          <h3 style="margin-bottom: 0.5rem;">🎥 Video & Reels Forensics</h3>
+          <p style="color: var(--text-sub); line-height: 1.6; font-size: 0.95rem;">
+            Performs temporal frame variance and inconsistency checks using OpenCV to flag deepfakes and manipulated video files.
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Technology Stack -->
+    <div class="glass-card" style="margin-top: 2rem;">
+      <h2>Technology Stack</h2>
+      <ul style="color: var(--text-sub); margin-top: 1rem; line-height: 2; padding-left: 1.2rem;">
+        <li><strong>Backend Engine:</strong> Python, Flask, Flask-CORS</li>
+        <li><strong>OCR & Image Processing:</strong> Tesseract OCR (Marathi & English dataset `mar+eng`), PIL, NumPy</li>
+        <li><strong>Computer Vision & Video Forensics:</strong> OpenCV (Frame-by-Frame Temporal Variance)</li>
+        <li><strong>APIs & Web Scraping:</strong> Google Fact-Check Tools API, BeautifulSoup4</li>
+        <li><strong>User Interface:</strong> HTML5, Responsive CSS Glassmorphic Design, JavaScript</li>
+      </ul>
+    </div>
+
   </div>
+
 </body>
 </html>
