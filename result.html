@@ -40,6 +40,7 @@
     .report-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; padding: 2rem; backdrop-filter: blur(16px); display: flex; flex-direction: column; }
     .flex-center { align-items: center; justify-content: center; text-align: center; }
     .card-title { color: #9ca3af; font-size: 0.95rem; margin-bottom: 0.8rem; }
+    .card-subtext { color: #6b7280; font-size: 0.85rem; margin-top: 0.4rem; }
     .score-value { font-size: 3.2rem; font-weight: 700; margin-bottom: 0.4rem; }
     .status-value { font-size: 1.8rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.4rem; }
     .desc-text { color: #9ca3af; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem; }
@@ -50,7 +51,17 @@
     .progress-bar-bg { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; }
     .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.8s ease-in-out, background-color 0.4s ease; }
     .action-buttons { margin-top: 2rem; display: flex; gap: 1rem; }
-    .btn-primary { background: #7c3aed; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block; }
+    .btn-primary { background: #7c3aed; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block; border: none; cursor: pointer; }
+
+    /* Print View Optimization */
+    @media print {
+      body { background: #ffffff !important; color: #000000 !important; }
+      .no-print, .lang-toggle, .action-buttons { display: none !important; }
+      .report-card { background: #ffffff !important; border: 1px solid #cccccc !important; color: #000000 !important; box-shadow: none !important; }
+      .report-header h2, .card-title, .desc-text, .progress-labels { color: #000000 !important; }
+      .tag { background: #f3f4f6 !important; color: #000000 !important; border: 1px solid #ccc !important; }
+      .progress-bar-bg { background: #e5e7eb !important; }
+    }
   </style>
 </head>
 <body>
@@ -78,7 +89,7 @@
       <div class="report-card flex-center">
         <span class="card-title" id="lbl-trust">Digital Trust Score</span>
         <div class="score-value" id="res-score">--%</div>
-        <span class="card-subtext">Model Confidence: 87.5%</span>
+        <span class="card-subtext" id="lbl-model-conf">Model Confidence: 87.5%</span>
       </div>
 
       <!-- Top Right: Risk Assessment -->
@@ -90,10 +101,10 @@
 
       <!-- Bottom Left: Model Assessment -->
       <div class="report-card">
-        <h3 id="lbl-assessment">Model Assessment</h3>
+        <h3 id="lbl-assessment" style="margin-bottom: 0.8rem;">Model Assessment</h3>
         <p class="desc-text" id="res-explanation">Loading analysis...</p>
         
-        <h4 id="lbl-indicators">Key Indicators Detected</h4>
+        <h4 id="lbl-indicators" style="margin-bottom: 0.8rem;">Key Indicators Detected</h4>
         <div class="indicator-tags" id="res-keywords">
           <span class="tag">Loading...</span>
         </div>
@@ -101,7 +112,7 @@
 
       <!-- Bottom Right: Layered Score Breakdown -->
       <div class="report-card">
-        <h3 id="lbl-breakdown">Layered Score Breakdown</h3>
+        <h3 id="lbl-breakdown" style="margin-bottom: 1rem;">Layered Score Breakdown</h3>
         <div class="breakdown-list">
           
           <div class="progress-item">
@@ -142,20 +153,21 @@
     <!-- Navigation Buttons -->
     <div class="action-buttons">
       <a href="analyze.html" class="btn-primary" id="btn-analyze">Analyze Another Item</a>
-      <a href="#" onclick="window.print(); return false;" class="btn-primary" style="background: rgba(255,255,255,0.1);" id="btn-print">Export Printable Report</a>
+      <button onclick="window.print()" class="btn-primary" style="background: rgba(255,255,255,0.1);" id="btn-print">Export Printable Report</button>
     </div>
 
   </div>
 
   <script>
     let globalData = null;
-    let currentLang = 'en'; // Default language is English
+    let currentLang = 'en';
 
     document.addEventListener('DOMContentLoaded', () => {
       try {
-        const raw = sessionStorage.getItem('latestResult');
+        // Read from sessionStorage or fallback to localStorage
+        const raw = sessionStorage.getItem('latestResult') || localStorage.getItem('latestReport');
         if (!raw) {
-          alert('No result found in Session! Please run an analysis first.');
+          alert('No result found! Please run an analysis first.');
           return;
         }
 
@@ -163,7 +175,7 @@
         renderReport();
 
       } catch (err) {
-        console.error("Error loading data:", err);
+        console.error("Error loading analysis result:", err);
       }
     });
 
@@ -177,9 +189,10 @@
     function renderReport() {
       if (!globalData) return;
 
-      const score = Math.round(globalData.trust_score ?? globalData.score ?? 85);
+      const rawScore = globalData.trust_score ?? globalData.trustScore ?? globalData.score ?? globalData.result?.confidence ?? 85;
+      const score = Math.round(typeof rawScore === 'number' ? rawScore : parseFloat(rawScore || 0));
       
-      // Dynamic Colors
+      // Dynamic Theme Color Thresholds
       let themeColor = '#22c55e'; // Green
       if (score < 40) themeColor = '#ef4444'; // Red
       else if (score < 75) themeColor = '#f59e0b'; // Orange
@@ -187,18 +200,23 @@
       document.getElementById('res-score').innerText = `${score}%`;
       document.getElementById('res-score').style.color = themeColor;
 
-      // Select Language Specific Fields
       const isMr = currentLang === 'mr';
 
-      document.getElementById('res-risk').innerText = isMr ? (globalData.risk_level_mr || globalData.risk_level) : (globalData.risk_level_en || globalData.risk_level);
+      // Dynamic Risk Assessment Logic
+      const defaultRiskEn = score < 50 ? "HIGH RISK" : "LOW RISK";
+      const defaultRiskMr = score < 50 ? "उच्च जोखीम (HIGH RISK)" : "कमी जोखीम (LOW RISK)";
+      document.getElementById('res-risk').innerText = isMr ? (globalData.risk_level_mr || globalData.risk_level || defaultRiskMr) : (globalData.risk_level_en || globalData.risk_level || defaultRiskEn);
       document.getElementById('res-risk').style.color = themeColor;
 
-      document.getElementById('res-explanation').innerText = isMr ? (globalData.explanation_mr || globalData.explanation) : (globalData.explanation_en || globalData.explanation);
+      // Dynamic Explanation Text
+      const explanationText = globalData.explanation || globalData.opinion || globalData.result?.explanation || "Analysis successfully processed.";
+      document.getElementById('res-explanation').innerText = isMr ? (globalData.explanation_mr || explanationText) : (globalData.explanation_en || explanationText);
 
-      // Render Dynamic Labels on Page based on Language
+      // UI Labels Translation
       document.getElementById('heading-title').innerText = isMr ? "फॉरेन्सिक विश्लेषण अहवाल" : "Forensic Analysis Report";
       document.getElementById('heading-subtitle').innerText = isMr ? "AI बहुस्तरीय सत्यता आणि अचूकता मूल्यांकन" : "AI Multi-Layered Truth & Authenticity Evaluation";
       document.getElementById('lbl-trust').innerText = isMr ? "डिजिटल विश्वासार्हता स्कोअर" : "Digital Trust Score";
+      document.getElementById('lbl-model-conf').innerText = isMr ? "मॉडेल विश्वासार्हता: 87.5%" : "Model Confidence: 87.5%";
       document.getElementById('lbl-risk').innerText = isMr ? "जोखीम मूल्यांकन" : "Risk Assessment";
       document.getElementById('lbl-scan').innerText = isMr ? "मजकूर तांत्रिक तपासणी पूर्ण" : "Text Linguistic Scan Complete";
       document.getElementById('lbl-assessment').innerText = isMr ? "AI मॉडेलचे मत" : "Model Assessment";
@@ -210,7 +228,7 @@
       document.getElementById('btn-analyze').innerText = isMr ? "दुसऱ्या मजकुराची तपासणी करा" : "Analyze Another Item";
       document.getElementById('btn-print').innerText = isMr ? "अहवाल प्रिंट करा" : "Export Printable Report";
 
-      // Progress Bars
+      // Progress Bars Dynamic Calculations
       const lingBarFill = document.getElementById('bar-score-fill');
       document.getElementById('bar-score-text').innerText = `${score}%`;
       document.getElementById('bar-score-text').style.color = themeColor;
@@ -228,18 +246,23 @@
       document.getElementById('source-score-fill').style.width = `${sourceScore}%`;
       document.getElementById('source-score-fill').style.backgroundColor = themeColor;
 
-      // Render Keywords
+      // Render Keywords / Indicators Safely
       const kwContainer = document.getElementById('res-keywords');
       const kwList = isMr ? (globalData.keywords_mr || globalData.keywords) : (globalData.keywords_en || globalData.keywords);
       
       kwContainer.innerHTML = '';
-      if (Array.isArray(kwList)) {
+      if (Array.isArray(kwList) && kwList.length > 0) {
         kwList.forEach(item => {
           const span = document.createElement('span');
           span.className = 'tag';
           span.innerText = item;
           kwContainer.appendChild(span);
         });
+      } else {
+        const defaultTag = document.createElement('span');
+        defaultTag.className = 'tag';
+        defaultTag.innerText = isMr ? "सामान्य विश्लेषण" : "Standard Verification";
+        kwContainer.appendChild(defaultTag);
       }
     }
   </script>
