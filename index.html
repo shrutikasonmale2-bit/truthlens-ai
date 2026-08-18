@@ -28,7 +28,8 @@
       <li><a href="contact.html">Contact</a></li>
     </ul>
 
-    <div class="nav-actions">
+    <!-- लॉगिन स्टेटस अनुसार हे dynamic बदलेल -->
+    <div class="nav-actions" id="nav-actions-container">
       <a href="login.html" class="btn-secondary">Login</a>
       <a href="register.html" class="btn-primary">Register</a>
     </div>
@@ -82,9 +83,9 @@
         <h4 id="resTitle" style="color: #00e699; margin-bottom: 0.5rem;">Analyzing Content...</h4>
         <p id="resScore" style="color: #fff; font-size: 1.1rem; font-weight: bold;"></p>
         <p id="resExplain" style="color: var(--text-sub); font-size: 0.95rem; margin-top: 0.5rem; line-height: 1.5;"></p>
-        <div style="margin-top: 1.2rem; text-align: center;">
-          <a href="register.html" class="btn-primary" style="display: inline-block; padding: 8px 16px; font-size: 0.9rem;">Register for Full Access</a>
-        </div>
+        
+        <!-- Action Buttons Container -->
+        <div id="action-btn-container" style="margin-top: 1.2rem; text-align: center;"></div>
       </div>
     </div>
   </section>
@@ -144,10 +145,23 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      checkUserLoginStatus();
       if (localStorage.getItem('truthlens_sample_used')) {
         updateBadgeUsed();
       }
     });
+
+    // युजर लॉगिन आहे की नाही ते तपासा आणि Navbar अपडेट करा
+    function checkUserLoginStatus() {
+      const isLoggedIn = localStorage.getItem('truthlens_user_logged_in');
+      const navContainer = document.getElementById('nav-actions-container');
+
+      if (isLoggedIn && navContainer) {
+        navContainer.innerHTML = `
+          <a href="dashboard.html" class="btn-primary" style="background: #00e699; color: #000; font-weight: bold;">🚀 Go to Dashboard</a>
+        `;
+      }
+    }
 
     function updateBadgeUsed() {
       const badge = document.getElementById('trial-badge');
@@ -165,12 +179,20 @@
       const resTitle = document.getElementById('resTitle');
       const resScore = document.getElementById('resScore');
       const resExplain = document.getElementById('resExplain');
+      const isLoggedIn = localStorage.getItem('truthlens_user_logged_in');
 
       if (!text) {
         alert(selectedLang === 'mr' ? 'कृपया आधी बातमी किंवा मजकूर टाका!' : 'Please enter text or news content first!');
         return;
       }
 
+      // जर आधीच लॉगिन असाल तर थेट डॅशबोर्डवर पाठवा
+      if (isLoggedIn) {
+        window.location.href = "dashboard.html";
+        return;
+      }
+
+      // जर फ्री सॅम्पल वापरला असेल आणि लॉगिन नसेल तर लॉगिनला पाठवा
       if (localStorage.getItem('truthlens_sample_used')) {
         alert(selectedLang === 'mr' 
           ? 'तुम्ही मोफत सॅम्पल चाचणी वापरली आहे! अधिक विश्लेषणासाठी लॉगिन करा.' 
@@ -206,11 +228,13 @@
             resScore.innerText = `Trust Score: ${data.trust_score}% | Risk Level: ${data.risk_level}`;
             resExplain.innerText = data.explanation || "Content analysis executed successfully.";
           }
+          renderButtons(selectedLang);
         } else {
           resTitle.innerText = "⚠️ Server Response Error";
           resExplain.innerText = data.error || "Unable to reach backend server.";
         }
       } catch (err) {
+        // डेमो मोड - जर बॅकएंड सुरू नसेल
         localStorage.setItem('truthlens_sample_used', 'true');
         updateBadgeUsed();
 
@@ -223,6 +247,29 @@
           resScore.innerText = "Trust Score: 20.0% | Status: HIGH RISK (Suspicious)";
           resExplain.innerText = "Detected clickbait and urgent action triggers like 'Breaking', 'Free', and 'Share Immediately'.";
         }
+        renderButtons(selectedLang);
+      }
+    }
+
+    function renderButtons(lang) {
+      const container = document.getElementById('action-btn-container');
+      const isLoggedIn = localStorage.getItem('truthlens_user_logged_in');
+
+      if (isLoggedIn) {
+        container.innerHTML = `
+          <a href="dashboard.html" class="btn-primary" style="display: inline-block; padding: 10px 20px; font-size: 0.95rem; background: #00e699; color: #000;">
+            🚀 ${lang === 'mr' ? 'अजून विश्लेषण करण्यासाठी डॅशबोर्डवर जा' : 'Go to Dashboard for Full Analysis'}
+          </a>
+        `;
+      } else {
+        container.innerHTML = `
+          <a href="login.html" class="btn-primary" style="display: inline-block; padding: 8px 16px; font-size: 0.9rem; margin-right: 8px;">
+            ${lang === 'mr' ? 'लॉगिन करा (Login)' : 'Login for Full Access'}
+          </a>
+          <a href="register.html" class="btn-secondary" style="display: inline-block; padding: 8px 16px; font-size: 0.9rem;">
+            ${lang === 'mr' ? 'रजिस्टर करा (Register)' : 'Register'}
+          </a>
+        `;
       }
     }
   </script>
@@ -232,7 +279,6 @@
   (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="v0XOy2ltU36LPB9cxfHh4";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
   </script>
   <script src="theme-loader.js"></script>
-
 
 </body>
 </html>
