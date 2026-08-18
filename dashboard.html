@@ -85,7 +85,7 @@
       const userName = user.displayName || user.email.split('@')[0];
       document.getElementById('user-greeting').textContent = `Welcome Back, ${userName}`;
 
-      // 2. Fetch Dashboard Analytics from Firestore
+      // 2. Fetch Dashboard Analytics & Save Latest Data
       try {
         const q = query(collection(db, 'analyses'), where('userId', '==', user.uid));
         const querySnapshot = await getDocs(q);
@@ -93,9 +93,14 @@
         let totalCount = querySnapshot.size;
         let safeCount = 0;
         let riskyCount = 0;
+        let latestDocData = null;
 
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
+          
+          // Store latest record (for fallback in report.html)
+          latestDocData = { id: docSnap.id, ...data };
+
           const rawScore = data.trust_score ?? data.trustScore ?? data.score ?? 0;
           const numericScore = typeof rawScore === 'number' ? rawScore : parseFloat(rawScore || 0);
 
@@ -106,19 +111,26 @@
           }
         });
 
+        // 3. Update Dashboard Stats
         document.getElementById('stat-total').textContent = totalCount;
         document.getElementById('stat-safe').textContent = safeCount;
         document.getElementById('stat-risky').textContent = riskyCount;
+
+        // 4. Save Latest Report to LocalStorage (This fixes "No scan data found" issue)
+        if (latestDocData) {
+          localStorage.setItem('latestReport', JSON.stringify(latestDocData));
+        }
 
       } catch (error) {
         console.error("Dashboard metrics load error:", error);
       }
     });
 
-    // 3. Logout Event Handling
+    // 5. Logout Event Handling
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       try {
         await signOut(auth);
+        localStorage.removeItem('latestReport'); // Clear session cache
         window.location.href = 'login.html';
       } catch (err) {
         console.error("Logout Error:", err);
