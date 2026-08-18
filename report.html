@@ -89,17 +89,18 @@
     </div>
   </div>
 
+  <!-- Firebase Script Integration -->
   <script type="module">
     import { db, doc, getDoc } from './firebase.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       let data = null;
 
-      // 1. Fetch from Firestore if URL parameter exists (e.g., report.html?id=ABC123XYZ)
+      // 1. Fetch from Firestore if URL parameter exists (e.g., report.html?id=DOCUMENT_ID)
       const urlParams = new URLSearchParams(window.location.search);
       const docId = urlParams.get('id');
 
-      if (docId) {
+      if (docId && db) {
         try {
           const docRef = doc(db, 'analyses', docId);
           const docSnap = await getDoc(docRef);
@@ -107,30 +108,33 @@
             data = docSnap.data();
           }
         } catch (err) {
-          console.error("Firestore document fetch error:", err);
+          console.error("Firestore fetch error:", err);
         }
       }
 
-      // 2. Fallback to LocalStorage if URL parameter is absent or not found
+      // 2. Fallback to LocalStorage if no URL ID provided
       if (!data) {
         const rawData = localStorage.getItem('latestReport');
         if (rawData) {
           try {
             data = JSON.parse(rawData);
           } catch (e) {
-            console.error("LocalStorage parsing error:", e);
+            console.error("LocalStorage JSON parse error:", e);
           }
         }
       }
 
-      // 3. Render empty state if no valid data source exists
+      // 3. Handle Empty State safely
       if (!data) {
-        document.getElementById('report-text').innerText = "No scan data found. Please analyze content or select a record from History.";
+        document.getElementById('trust-score-text').innerText = "N/A";
+        document.getElementById('trust-score-text').style.color = "#9ca3af";
         document.getElementById('snippet-text').innerText = '"No snippet available"';
+        document.getElementById('report-text').innerText = "No scan data found. Please analyze content on the Dashboard first.";
+        document.getElementById('risk-badge-container').innerHTML = `<span class="badge-risk" style="color: #9ca3af; background: rgba(156, 163, 175, 0.15); padding: 6px 14px; border-radius: 6px; border: 1px solid #9ca3af;">NO DATA</span>`;
         return;
       }
 
-      // 4. Calculate Trust Score across schema variations
+      // 4. Extract Score Safely
       const rawScore = data.trust_score ?? data.trustScore ?? data.score ?? data.result?.trust_score ?? data.result?.confidence ?? 0;
       const numericScore = typeof rawScore === 'number' ? rawScore : parseFloat(rawScore || 0);
       const scoreFormatted = numericScore.toFixed(1);
@@ -143,7 +147,7 @@
                          data.isFake === true || 
                          numericScore < 50.0;
 
-      // 6. Update Score & Risk Badge UI
+      // 6. Render Score & Badge UI
       const scoreElement = document.getElementById('trust-score-text');
       scoreElement.innerText = `${scoreFormatted}%`;
       scoreElement.style.color = isHighRisk ? '#ef4444' : '#22c55e';
@@ -153,7 +157,7 @@
         ? `<span class="badge-risk" style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 6px 14px; border-radius: 6px; border: 1px solid #ef4444;">HIGH RISK</span>`
         : `<span class="badge-risk" style="color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.15); padding: 6px 14px; border-radius: 6px; border: 1px solid #22c55e;">LOW RISK</span>`;
 
-      // 7. Update Snippet & Findings safely (.innerText prevents XSS)
+      // 7. Update Text Details
       document.getElementById('content-type-text').innerText = data.category || data.contentType || data.type || 'Text';
       
       const snippet = data.extracted_text || data.scraped_snippet || data.contentSnippet || data.text || 'No snippet provided';
@@ -163,11 +167,11 @@
         document.getElementById('report-text').innerText = data.explanation || data.opinion || data.result?.explanation;
       } else {
         document.getElementById('report-text').innerText = isHighRisk 
-          ? "Warning: The analyzed content exhibits patterns typically associated with misinformation or synthetic media. Further verification from authentic sources is recommended."
-          : "The analyzed content passed evaluation with high confidence. No significant indicators of automated manipulation or fake content were detected.";
+          ? "Warning: The analyzed content exhibits patterns typically associated with misinformation or synthetic media."
+          : "The analyzed content passed evaluation with high confidence. No significant indicators of automated manipulation were detected.";
       }
 
-      // 8. Safely Format Timestamp / Date
+      // 8. Safely Format Date
       let dateStr = new Date().toLocaleDateString();
       if (data.timestamp) {
         dateStr = typeof data.timestamp.toDate === 'function' ? data.timestamp.toDate().toLocaleDateString() : new Date(data.timestamp).toLocaleDateString();
@@ -178,6 +182,5 @@
     });
   </script>
   <script src="theme-loader.js"></script>
-
 </body>
 </html>
